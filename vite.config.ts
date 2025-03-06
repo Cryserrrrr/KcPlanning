@@ -1,6 +1,7 @@
 import { vitePlugin as remix } from "@remix-run/dev";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
+import { configDefaults } from "vitest/config";
 
 declare module "@remix-run/node" {
   interface Future {
@@ -21,4 +22,11 @@ export default defineConfig({
     }),
     tsconfigPaths(),
   ],
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: ["./app/test/setup.ts"],
+    include: ["**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    testTimeout: 30000,
+  },
 });
