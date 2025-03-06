@@ -7,8 +7,6 @@ export async function scrapeLolTeams(teamName: string) {
 
   const page = await browser.newPage();
 
-  console.log("🟩 New page created");
-
   let formattedTeamName = teamName;
   if (teamName === "Ici Japon Corp") {
     formattedTeamName = "Ici_Japon_Corp._Esport";
@@ -16,17 +14,12 @@ export async function scrapeLolTeams(teamName: string) {
     formattedTeamName = teamName.replace(/\s+/g, "_");
   }
 
-  console.log(
-    "🟩 Formatted team name",
-    `https://lol.fandom.com/wiki/${formattedTeamName}`
-  );
-
   const url = `https://lol.fandom.com/wiki/${formattedTeamName}`;
 
   try {
     await page.goto(url, {
       waitUntil: "networkidle2",
-      timeout: 100000,
+      timeout: 30000,
     });
   } catch (error) {
     console.log(`🟥 Navigation timeout for ${formattedTeamName}:`);
@@ -34,15 +27,11 @@ export async function scrapeLolTeams(teamName: string) {
     return [];
   }
 
-  console.log("🟩 Going to team page");
-
   try {
     await page.click("#onetrust-reject-all-handler");
   } catch (error) {
     console.log("🟥 Cookie banner not found or already handled");
   }
-
-  console.log("🟩 Cookie banner handled");
 
   // Try multiple possible table selectors
   let table;
@@ -60,8 +49,6 @@ export async function scrapeLolTeams(teamName: string) {
       return [];
     }
   }
-
-  console.log("🟩 Table found");
 
   if (!table) {
     await browser.close();
@@ -93,22 +80,16 @@ export async function scrapeLolTeams(teamName: string) {
     return players;
   });
 
-  console.log("🟩 Roster found");
-
   if (!roster || roster.length === 0) {
     await browser.close();
     return [];
   }
-
-  console.log("🟩 Filtering roster");
 
   roster = roster
     .filter((player, index, self) => {
       return self.findIndex((t) => t.position === player.position) === index;
     })
     .slice(0, 5);
-
-  console.log("🟩 Roster filtered");
 
   await browser.close();
 

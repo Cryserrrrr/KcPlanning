@@ -185,14 +185,10 @@ export async function scrapeKCMatches(): Promise<void> {
 
   await browser.close();
 
-  console.log("🟩 Browser closed");
-
   // Check if matchs is already in the database
   const existingMatches: MatchType[] = await Match.find({
     date: { $gte: new Date() },
   });
-
-  console.log("🟩 Existing matches found");
 
   // If match is already in the database and if the team is not TBD, skip
   const matchesToAdd: (MatchType | null)[] = matches
@@ -228,8 +224,6 @@ export async function scrapeKCMatches(): Promise<void> {
     return;
   }
 
-  console.log("🟩 Adding roster to matches");
-
   // Add roster to matches
   const teamsToAdd: string[] = [];
   for (const match of matchesToAdd) {
@@ -258,8 +252,6 @@ export async function scrapeKCMatches(): Promise<void> {
         rosterAlreadyAdded[team.name] = roster;
       }
     }
-
-    console.log("🟩 Scraping stats");
 
     const statsData: ScrapingResult = await scrapeLolStats(
       match.teams[0].name,
@@ -292,8 +284,6 @@ export async function scrapeKCMatches(): Promise<void> {
       player.stats = playerStats;
     });
   }
-
-  console.log("🟩 Adding matches to database");
 
   // Add match to database
   for (const match of matchesToAdd) {
