@@ -17,8 +17,6 @@ export async function updateTodayMatchesStatus(): Promise<void> {
       status: 0,
     });
 
-    console.log("🟥 todayMatches", todayMatches);
-
     // Pour chaque match, vérifier si l'heure de début est passée
     for (const match of todayMatches) {
       const matchDate = new Date(match.date);
