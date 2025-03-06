@@ -16,9 +16,14 @@ export async function scrapeLolTeams(teamName: string) {
     formattedTeamName = teamName.replace(/\s+/g, "_");
   }
 
-  console.log("🟩 Formatted team name", formattedTeamName);
+  console.log(
+    "🟩 Formatted team name",
+    `https://lol.fandom.com/wiki/${formattedTeamName}`
+  );
 
-  await page.goto(`https://lol.fandom.com/wiki/${formattedTeamName}`, {
+  const url = `https://lol.fandom.com/wiki/${formattedTeamName}`;
+
+  await page.goto(url, {
     waitUntil: "networkidle2",
   });
 
