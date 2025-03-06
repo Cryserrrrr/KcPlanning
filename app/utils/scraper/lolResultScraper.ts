@@ -15,7 +15,9 @@ const LEC_URL: string =
 export async function scrapeLolResults(): Promise<void> {
   await connectDB();
 
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
 
   const page = await browser.newPage();
 

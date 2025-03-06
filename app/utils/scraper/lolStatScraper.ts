@@ -69,7 +69,9 @@ export async function scrapeLolStats(
   league: string,
   type: string
 ): Promise<ScrapingResult> {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
 
   const formattedTeamOneNameWithUnderscore = teamOneName.replace(/\s+/g, "_");
   const formattedTeamTwoNameWithUnderscore = teamTwoName.replace(/\s+/g, "_");
