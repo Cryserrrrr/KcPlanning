@@ -51,11 +51,7 @@ export function startChangeStatusScheduler() {
   nextHour.setSeconds(0);
   nextHour.setMilliseconds(0);
 
-  console.log(nextHour);
-
   const delay = nextHour.getTime() - now.getTime();
-
-  console.log(delay);
 
   setTimeout(async () => {
     updateMatchesStatusScheduler();
