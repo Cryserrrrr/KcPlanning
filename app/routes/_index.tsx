@@ -57,7 +57,8 @@ export const loader: LoaderFunction = async ({ request }) => {
   const endDate = format(addDays(startDay, 6), "yyyy-MM-dd");
 
   const startDateTime = new Date(startDate);
-  startDateTime.setUTCHours(0, 0, 0, 0);
+  startDateTime.setDate(startDateTime.getDate() - 1);
+  startDateTime.setUTCHours(23, 0, 0, 0);
 
   const endDateTime = new Date(endDate);
   endDateTime.setUTCHours(22, 59, 59, 999);
