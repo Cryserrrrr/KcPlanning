@@ -12,13 +12,3 @@ aptPkgs = [
   "libxshmfence1",
   "libglu1"
 ]
-
-[phases.build]
-# Force le use d'un script, si besoin :
-# buildCmd = "npm run build"
-# Si Railpack supporte un paramètre pour conserver /app/.cache :
-# cacheDirs = ["/app/.cache"]
-
-[phases.deploy]
-# Si Railpack supporte un paramètre pour conserver /app/.cache :
-# cacheDirs = ["/app/.cache"]
