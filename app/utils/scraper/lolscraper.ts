@@ -47,9 +47,13 @@ export async function scrapeKCMatches(): Promise<void> {
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
+  console.log("🟩 Launching browser");
+
   const page = await browser.newPage();
 
   await page.goto(LEC_URL, { waitUntil: "networkidle2" });
+
+  console.log("🟩 Going to LEC URL");
 
   const containerDiv = await page.waitForSelector(
     "div.d_flex.flex-d_column.flex_1_auto.w_100\\%"
@@ -59,6 +63,8 @@ export async function scrapeKCMatches(): Promise<void> {
     await browser.close();
     return;
   }
+
+  console.log("🟩 Waiting for container div");
 
   await page.waitForFunction(
     (): boolean => {
@@ -70,6 +76,8 @@ export async function scrapeKCMatches(): Promise<void> {
     },
     { timeout: 10000 }
   );
+
+  console.log("🟩 Container div found");
 
   const karmineCorpMatches: (MatchType | null)[] = await containerDiv.evaluate(
     (): (MatchType | null)[] => {
