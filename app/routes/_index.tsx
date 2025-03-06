@@ -79,9 +79,10 @@ export const loader: LoaderFunction = async ({ request }) => {
     newestMatchDate = new Date();
   } else {
     oldestMatchDate = new Date(oldestMatch.date);
-    oldestMatchDate.setHours(0, 0, 0, 0);
+    oldestMatchDate.setDate(oldestMatchDate.getDate() - 1);
+    oldestMatchDate.setHours(23, 0, 0, 0);
     newestMatchDate = new Date(newestMatch.date);
-    newestMatchDate.setHours(23, 59, 59, 999);
+    newestMatchDate.setHours(22, 59, 59, 999);
   }
 
   return json<LoaderData>({
