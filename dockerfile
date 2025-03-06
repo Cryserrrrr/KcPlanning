@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y \
   libgbm1 \
   xdg-utils
 
+RUN echo "Dockerfile personnalisé utilisé"
+
 # Définition du répertoire de travail
 WORKDIR /app
 
