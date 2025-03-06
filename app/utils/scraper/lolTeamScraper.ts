@@ -16,7 +16,7 @@ export async function scrapeLolTeams(teamName: string) {
     formattedTeamName = teamName.replace(/\s+/g, "_");
   }
 
-  console.log("🟩 Formatted team name");
+  console.log("🟩 Formatted team name", formattedTeamName);
 
   await page.goto(`https://lol.fandom.com/wiki/${formattedTeamName}`, {
     waitUntil: "networkidle2",
