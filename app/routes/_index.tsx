@@ -36,19 +36,13 @@ type LoaderData = {
 
 export type MatchTypeWithId = Omit<MatchType, "_id"> & { _id: Types.ObjectId };
 
-export const loader: LoaderFunction = async () => {
+export const loader: LoaderFunction = async ({ request }) => {
   const today = new Date();
   const startDay = startOfWeek(today, { weekStartsOn: 2 });
 
-  const getLocalLanguage = () => {
-    const language = navigator.language;
-    if (language.includes("fr")) {
-      return fr;
-    }
-    return null;
-  };
-
-  const locale = getLocalLanguage();
+  // Server can't detect browser language, so use null for locale
+  // Client will handle localization
+  const locale = null;
 
   const weekDays = Array.from({ length: 7 }).map((_, index) => {
     const date = addDays(startDay, index);
@@ -99,7 +93,7 @@ export const loader: LoaderFunction = async () => {
 export default function Index() {
   const {
     matches: initialMatches,
-    weekDays,
+    weekDays: initialWeekDays,
     startDate: initialStartDate,
     endDate: initialEndDate,
     oldestMatch,
@@ -114,13 +108,7 @@ export default function Index() {
   const [dateAlreadyLoaded, setDateAlreadyLoaded] = useState<Date[]>([
     startDate,
   ]);
-  const [weekDaysState, setWeekDaysState] = useState<
-    {
-      date: Date;
-      formattedDate: Date;
-      dayName: string;
-    }[]
-  >(weekDays);
+  const [weekDays, setWeekDays] = useState(initialWeekDays);
   const [isSidebarOpen, setIsSidebarOpen] = useState<string | null>(null);
   const [showArrows, setShowArrows] = useState<{
     start: boolean;
@@ -135,6 +123,13 @@ export default function Index() {
     null
   );
   const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
+  const [weekDaysState, setWeekDaysState] = useState<
+    {
+      date: Date;
+      formattedDate: Date;
+      dayName: string;
+    }[]
+  >(initialWeekDays);
 
   // Check if device is mobile
   useEffect(() => {
@@ -149,6 +144,24 @@ export default function Index() {
       window.removeEventListener("resize", checkMobile);
     };
   }, []);
+
+  // Handle localization on client side
+  useEffect(() => {
+    // Check if we should use French locale
+    const shouldUseFrench = navigator.language.includes("fr");
+
+    if (shouldUseFrench) {
+      // Update weekdays with French locale
+      const localizedWeekDays = initialWeekDays.map((day) => ({
+        ...day,
+        dayName: format(new Date(day.date), "EEEE", { locale: fr }),
+      }));
+      setWeekDays(localizedWeekDays);
+
+      // Also update weekDaysState if needed
+      setWeekDaysState(localizedWeekDays);
+    }
+  }, [initialWeekDays]);
 
   const loadMatchesForPeriod = async (start: Date, end: Date) => {
     const formattedStart = format(start, "yyyy-MM-dd");
