@@ -34,7 +34,7 @@ export function getChampionImageUrl(championName: string) {
     championNameFormatted = specialChampions[championNameFormatted];
   }
 
-  return `https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/${championNameFormatted}.png`;
+  return `https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/${championNameFormatted}.png`;
 }
 
 export function isMobileScreen() {

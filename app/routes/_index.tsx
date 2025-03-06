@@ -81,7 +81,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     oldestMatchDate = new Date(oldestMatch.date);
     oldestMatchDate.setHours(0, 0, 0, 0);
     newestMatchDate = new Date(newestMatch.date);
-    newestMatchDate.setHours(22, 59, 59, 999);
+    newestMatchDate.setHours(23, 59, 59, 999);
   }
 
   return json<LoaderData>({
@@ -123,9 +123,6 @@ export default function Index() {
   });
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [currentDayIndex, setCurrentDayIndex] = useState<number>(0);
-  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(
-    null
-  );
   const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
   const [weekDaysState, setWeekDaysState] = useState<
     {
@@ -324,46 +321,6 @@ export default function Index() {
     }
   };
 
-  const handleNextArrowMouseDown = () => {
-    if (!showArrows.end) return;
-
-    const timer = setTimeout(() => {
-      findNextMatchDate();
-    }, 2000);
-
-    setLongPressTimer(timer);
-  };
-
-  const handlePrevArrowMouseDown = () => {
-    if (!showArrows.start) return;
-
-    const timer = setTimeout(() => {
-      findPreviousMatchDate();
-    }, 2000);
-
-    setLongPressTimer(timer);
-  };
-
-  const handleArrowMouseUp = () => {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      setLongPressTimer(null);
-    }
-  };
-
-  // Add touch events for mobile
-  const handleTouchStart = (callback: () => void) => {
-    const timer = setTimeout(callback, 2000);
-    setLongPressTimer(timer);
-  };
-
-  const handleTouchEnd = () => {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      setLongPressTimer(null);
-    }
-  };
-
   const handleDateSelect = (date: Date) => {
     const weekStart = startOfWeek(date, { weekStartsOn: 2 });
     setStartDate(weekStart);
@@ -406,11 +363,6 @@ export default function Index() {
                     setEndDate(addDays(endDate, -7));
                   }
                 }}
-                onMouseDown={handlePrevArrowMouseDown}
-                onMouseUp={handleArrowMouseUp}
-                onMouseLeave={handleArrowMouseUp}
-                onTouchStart={() => handleTouchStart(findPreviousMatchDate)}
-                onTouchEnd={handleTouchEnd}
               />
             )}
             <p
@@ -441,11 +393,6 @@ export default function Index() {
                     setEndDate(addDays(endDate, 7));
                   }
                 }}
-                onMouseDown={handleNextArrowMouseDown}
-                onMouseUp={handleArrowMouseUp}
-                onMouseLeave={handleArrowMouseUp}
-                onTouchStart={() => handleTouchStart(findNextMatchDate)}
-                onTouchEnd={handleTouchEnd}
               />
             )}
           </div>
@@ -490,13 +437,11 @@ export default function Index() {
                 : "cursor-pointer"
             }`}
             onClick={goToPreviousDay}
-            onMouseDown={handlePrevArrowMouseDown}
-            onMouseUp={handleArrowMouseUp}
-            onMouseLeave={handleArrowMouseUp}
-            onTouchStart={() => handleTouchStart(findPreviousMatchDate)}
-            onTouchEnd={handleTouchEnd}
           />
-          <h2 className="text-4xl font-bold text-primary">
+          <h2
+            className="text-4xl font-bold text-primary cursor-pointer"
+            onClick={() => setIsCalendarOpen(true)}
+          >
             {weekDaysState[currentDayIndex].dayName.charAt(0).toUpperCase() +
               weekDaysState[currentDayIndex].dayName.slice(1)}{" "}
             {format(weekDaysState[currentDayIndex].date, "dd")}
@@ -510,11 +455,6 @@ export default function Index() {
                 : "cursor-pointer"
             }`}
             onClick={goToNextDay}
-            onMouseDown={handleNextArrowMouseDown}
-            onMouseUp={handleArrowMouseUp}
-            onMouseLeave={handleArrowMouseUp}
-            onTouchStart={() => handleTouchStart(findNextMatchDate)}
-            onTouchEnd={handleTouchEnd}
           />
         </div>
       )}

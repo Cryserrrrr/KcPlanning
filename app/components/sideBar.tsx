@@ -51,7 +51,11 @@ export default function Sidebar({ isOpen, onClose, match }: SidebarProps) {
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-600 cursor-pointer"
         >
-          <img src={closeIcon} alt="close" className="w-6 h-6" />
+          <img
+            src={closeIcon}
+            alt="close"
+            className={`${isMobile ? "w-10 h-10" : "w-6 h-6"}`}
+          />
         </button>
         <h1 className="text-2xl font-bold">
           {karmineCorp?.name} vs {opponent?.name || "TBD"}

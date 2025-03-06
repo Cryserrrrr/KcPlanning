@@ -32,22 +32,20 @@ const MatchBox = ({
   const color = getMatchColor(match);
   return (
     <div
-      className={`flex flex-col gap-2 border border-gray p-1 mx-2 w-[96%] ${color} ${
-        isMobile ? "text-2xl" : "text-sm"
-      }`}
+      className={`flex flex-col gap-2 border border-gray p-1 mx-2 w-[96%] ${color}`}
       onClick={onClick}
     >
       <div className="flex flex-row justify-between gap-2">
         <div
-          className={`text-sm border border-gray rounded-md bg-black/50 flex items-center justify-center ${
-            isMobile ? "text-4xl p-6" : "p-2 px-4"
+          className={` border border-gray rounded-md bg-black/50 flex items-center justify-center ${
+            isMobile ? "text-5xl p-6" : "p-2 px-4 text-sm"
           }`}
         >
           {league}
         </div>
         <div
-          className={`text-sm border border-gray rounded-md p-2 w-full text-center bg-black/50 flex items-center justify-center ${
-            isMobile ? "text-4xl py-6" : "p-2"
+          className={`border border-gray rounded-md p-2 w-full text-center bg-black/50 flex items-center justify-center ${
+            isMobile ? "text-5xl py-6" : "p-2 text-sm"
           }`}
         >
           {match.game}

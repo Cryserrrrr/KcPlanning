@@ -4,7 +4,6 @@ import { scrapeLolStats } from "./scraper/lolStatScraper";
 import { updateTodayMatchesStatus } from "./changeStatus";
 
 export function startScheduler() {
-  scrapeKCMatches();
   // Lunch it every day at 23:00
   const now = new Date();
   const nextDay = new Date(now);
