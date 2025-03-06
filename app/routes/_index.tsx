@@ -12,7 +12,7 @@ import MatchBox from "~/components/matchBox";
 import Sidebar from "~/components/sideBar";
 import heart from "/icons/heart.svg";
 import { isMobileScreen } from "~/utils/utilsFunctions";
-import { Calendar } from "~/components/Calendar";
+import { Calendar } from "~/components/calendar";
 
 export const meta: MetaFunction = () => {
   return [
