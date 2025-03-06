@@ -71,14 +71,18 @@ export const loader: LoaderFunction = async ({ request }) => {
   const oldestMatch = await Match.findOne({}).sort({ date: 1 }).lean();
   const newestMatch = await Match.findOne({}).sort({ date: -1 }).lean();
 
-  if (!oldestMatch || !newestMatch) {
-    throw new Error("No matches found");
-  }
+  let oldestMatchDate: Date;
+  let newestMatchDate: Date;
 
-  const oldestMatchDate = new Date(oldestMatch.date);
-  oldestMatchDate.setHours(0, 0, 0, 0);
-  const newestMatchDate = new Date(newestMatch.date);
-  newestMatchDate.setHours(22, 59, 59, 999);
+  if (!oldestMatch || !newestMatch) {
+    oldestMatchDate = new Date();
+    newestMatchDate = new Date();
+  } else {
+    oldestMatchDate = new Date(oldestMatch.date);
+    oldestMatchDate.setHours(0, 0, 0, 0);
+    newestMatchDate = new Date(newestMatch.date);
+    newestMatchDate.setHours(22, 59, 59, 999);
+  }
 
   return json<LoaderData>({
     matches,
