@@ -6,12 +6,10 @@ export async function initializeCasters() {
   await connectDB();
   const existingCasters = await Caster.countDocuments();
   if (existingCasters === 0) {
-    console.log("🚀 Aucun caster trouvé, ajout automatique...");
+    console.log("🚀 No caster found, adding them automatically...");
     await addCasters();
-    console.log("✅ Casters ajoutés à la base de données !");
+    console.log("✅ Casters added to the database!");
   } else {
-    console.log(
-      "🔍 Des casters existent déjà en base, aucune action nécessaire."
-    );
+    console.log("🔍 Casters already exist in the database, no action needed.");
   }
 }

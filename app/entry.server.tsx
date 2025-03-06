@@ -12,15 +12,18 @@ import { RemixServer } from "@remix-run/react";
 import { isbot } from "isbot";
 import { renderToPipeableStream } from "react-dom/server";
 import { connectDB } from "./db";
-import { startScheduler } from "./utils/scheduler";
+import {
+  startChangeStatusScheduler,
+  startLolResultScheduler,
+  startScheduler,
+} from "./utils/scheduler";
 import { initializeCasters } from "./db/init-casters";
-import { startLolResultScheduler } from "./utils/scheduler";
-import { startLolStatScheduler } from "./utils/scheduler";
 
 startScheduler();
 startLolResultScheduler();
-startLolStatScheduler();
+startChangeStatusScheduler();
 initializeCasters();
+//startLolStatScheduler();
 connectDB().catch(console.error);
 
 const ABORT_DELAY = 5_000;

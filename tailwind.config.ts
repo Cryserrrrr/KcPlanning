@@ -17,7 +17,7 @@ module.exports = {
       },
       keyframes: {
         "pulse-red": {
-          "0%, 100%": { backgroundColor: "transparent" },
+          "0%, 100%": { backgroundColor: "black/50" },
           "50%": { backgroundColor: "rgba(239, 68, 68, 0.5)" }, // rouge semi-transparent
         },
       },

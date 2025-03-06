@@ -4,7 +4,7 @@ import { scrapeLolStats } from "./scraper/lolStatScraper";
 import { updateTodayMatchesStatus } from "./changeStatus";
 
 export function startScheduler() {
-  scrapeKCMatches();
+  // scrapeKCMatches();
   // Lunch it every day at 23:00
   const now = new Date();
   const nextDay = new Date(now);
@@ -19,25 +19,26 @@ export function startScheduler() {
 }
 
 const scrapeKCMatchesScheduler = async () => {
-  console.log("🔄 Scraping des matchs KC...");
+  console.log("🔄 Scraping KC matches...");
   await scrapeKCMatches();
   setInterval(async () => {
-    console.log("🔄 Scraping des matchs KC...");
+    console.log("🔄 Scraping KC matches...");
     await scrapeKCMatches();
   }, 86400000);
 };
 export function startLolResultScheduler() {
   //scrapeLolResults();
-  return;
+  // Lunch it every hour
+
   setInterval(async () => {
-    console.log("🔄 Scraping des matchs KC...");
+    console.log("🔄 Scraping LFL matches...");
     await scrapeLolResults();
-  }, 60000);
+  }, 60 * 60 * 1000);
 }
 
 // Only for testing
 export function startLolStatScheduler() {
-  //scrapeLolStats("Solary", "Karmine Corp Blue", "First Stand", "Tour 1");
+  scrapeLolStats("Solary", "Karmine Corp Blue", "First Stand", "Tour 1");
   return;
 }
 
@@ -50,7 +51,11 @@ export function startChangeStatusScheduler() {
   nextHour.setSeconds(0);
   nextHour.setMilliseconds(0);
 
+  console.log(nextHour);
+
   const delay = nextHour.getTime() - now.getTime();
+
+  console.log(delay);
 
   setTimeout(async () => {
     updateMatchesStatusScheduler();

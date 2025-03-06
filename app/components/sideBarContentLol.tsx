@@ -31,7 +31,7 @@ const RoleStatsTable = ({
               {tableTitle.map((title, index) => (
                 <th
                   key={index}
-                  className="px-4 py-2 text-left border border-gray-300 font-semibold"
+                  className="px-4 py-2 text-left border border-gray-300 font-semibold text-center"
                 >
                   {title}
                 </th>
@@ -135,8 +135,6 @@ export default function SidebarContentLol({
     }/${new Date().getFullYear()}_Season`;
   }
 
-  console.log(match);
-
   // Tableau des statistiques pour les champions
   const ChampionStatsTable = ({
     teamName,
@@ -171,7 +169,7 @@ export default function SidebarContentLol({
                 {tableTitle.map((title, index) => (
                   <th
                     key={index}
-                    className="px-4 py-2 text-left border border-gray-300 font-semibold"
+                    className="px-4 py-2 text-left border border-gray-300 font-semibold text-center"
                   >
                     {title}
                   </th>

@@ -111,7 +111,7 @@ export async function scrapeLolStats(
 
     return { kcStats, firstTeamStats, secondTeamStats, rankingData };
   } catch (error) {
-    console.error("❌ Erreur lors du scraping:", error);
+    console.error("❌ Error while scraping:", error);
     await browser.close();
     throw error;
   }

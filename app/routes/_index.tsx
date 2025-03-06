@@ -11,6 +11,9 @@ import { Types } from "mongoose";
 import MatchBox from "~/components/matchBox";
 import Sidebar from "~/components/sideBar";
 import heart from "/icons/heart.svg";
+import { isMobileScreen } from "~/utils/utilsFunctions";
+import { Calendar } from "~/components/Calendar";
+
 export const meta: MetaFunction = () => {
   return [
     { title: "Karmine Corp Schedule" },
@@ -27,6 +30,8 @@ type LoaderData = {
   }[];
   startDate: Date;
   endDate: Date;
+  oldestMatch: Date;
+  newestMatch: Date;
 };
 
 export type MatchTypeWithId = Omit<MatchType, "_id"> & { _id: Types.ObjectId };
@@ -61,7 +66,7 @@ export const loader: LoaderFunction = async () => {
   startDateTime.setUTCHours(0, 0, 0, 0);
 
   const endDateTime = new Date(endDate);
-  endDateTime.setUTCHours(23, 59, 59, 999);
+  endDateTime.setUTCHours(22, 59, 59, 999);
 
   const matches = (await Match.find({
     date: { $gte: startDateTime, $lte: endDateTime },
@@ -69,11 +74,25 @@ export const loader: LoaderFunction = async () => {
     .sort({ date: 1 })
     .lean()) as unknown as MatchTypeWithId[];
 
+  const oldestMatch = await Match.findOne({}).sort({ date: 1 }).lean();
+  const newestMatch = await Match.findOne({}).sort({ date: -1 }).lean();
+
+  if (!oldestMatch || !newestMatch) {
+    throw new Error("No matches found");
+  }
+
+  const oldestMatchDate = new Date(oldestMatch.date);
+  oldestMatchDate.setHours(0, 0, 0, 0);
+  const newestMatchDate = new Date(newestMatch.date);
+  newestMatchDate.setHours(22, 59, 59, 999);
+
   return json<LoaderData>({
     matches,
     weekDays,
     startDate: startDateTime,
     endDate: endDateTime,
+    oldestMatch: oldestMatchDate,
+    newestMatch: newestMatchDate,
   });
 };
 
@@ -83,6 +102,8 @@ export default function Index() {
     weekDays,
     startDate: initialStartDate,
     endDate: initialEndDate,
+    oldestMatch,
+    newestMatch,
   } = useLoaderData<LoaderData>();
   const [startDate, setStartDate] = useState<Date>(new Date(initialStartDate));
   const [endDate, setEndDate] = useState<Date>(new Date(initialEndDate));
@@ -101,6 +122,34 @@ export default function Index() {
     }[]
   >(weekDays);
   const [isSidebarOpen, setIsSidebarOpen] = useState<string | null>(null);
+  const [showArrows, setShowArrows] = useState<{
+    start: boolean;
+    end: boolean;
+  }>({
+    start: new Date(oldestMatch) < startDate,
+    end: new Date(newestMatch) > endDate,
+  });
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [currentDayIndex, setCurrentDayIndex] = useState<number>(0);
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(
+    null
+  );
+  const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(isMobileScreen());
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => {
+      window.removeEventListener("resize", checkMobile);
+    };
+  }, []);
+
   const loadMatchesForPeriod = async (start: Date, end: Date) => {
     const formattedStart = format(start, "yyyy-MM-dd");
     const formattedEnd = format(end, "yyyy-MM-dd");
@@ -135,7 +184,7 @@ export default function Index() {
         console.error("Erreur API:", response.status, errorText);
       }
     } catch (error) {
-      console.error("Erreur lors du chargement des matchs:", error);
+      console.error("Error loading matches:", error);
     }
   };
 
@@ -166,7 +215,153 @@ export default function Index() {
       );
       setWeekMatches(matches);
     }
+    setShowArrows({
+      start: new Date(oldestMatch) < startDate,
+      end: new Date(newestMatch) > endDate,
+    });
   }, [startDate, endDate]);
+
+  const goToPreviousDay = () => {
+    if (currentDayIndex > 0) {
+      setCurrentDayIndex(currentDayIndex - 1);
+    } else if (showArrows.start) {
+      // If we're at the first day of the week and can go to previous week
+      setStartDate(addDays(startDate, -7));
+      setEndDate(addDays(endDate, -7));
+      setCurrentDayIndex(6); // Set to last day of the new week
+    }
+  };
+
+  const goToNextDay = () => {
+    if (currentDayIndex < 6) {
+      setCurrentDayIndex(currentDayIndex + 1);
+    } else if (showArrows.end) {
+      // If we're at the last day of the week and can go to next week
+      setStartDate(addDays(startDate, 7));
+      setEndDate(addDays(endDate, 7));
+      setCurrentDayIndex(0); // Set to first day of the new week
+    }
+  };
+
+  const findNextMatchDate = () => {
+    const now = new Date();
+    // Sort matches by date
+    const sortedMatches = [...allMatches].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    // Find the next match (first match after current date)
+    const nextMatch = sortedMatches.find(
+      (match) => new Date(match.date).getTime() > now.getTime()
+    );
+
+    if (nextMatch) {
+      const matchDate = new Date(nextMatch.date);
+      // Find the start of the week containing this match
+      const weekStart = startOfWeek(matchDate, { weekStartsOn: 2 });
+      setStartDate(weekStart);
+      setEndDate(addDays(weekStart, 6));
+
+      // Find which day of the week the match is on (0-6)
+      const dayDiff = Math.floor(
+        (matchDate.getTime() - weekStart.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      setCurrentDayIndex(dayDiff);
+    } else {
+      // If no upcoming match, just go to next week
+      setStartDate(addDays(startDate, 7));
+      setEndDate(addDays(endDate, 7));
+      setCurrentDayIndex(0);
+    }
+  };
+
+  const findPreviousMatchDate = () => {
+    const now = new Date();
+    // Sort matches by date in reverse order
+    const sortedMatches = [...allMatches].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    // Find the previous match (first match before current date)
+    const prevMatch = sortedMatches.find(
+      (match) => new Date(match.date).getTime() < now.getTime()
+    );
+
+    if (prevMatch) {
+      const matchDate = new Date(prevMatch.date);
+      // Find the start of the week containing this match
+      const weekStart = startOfWeek(matchDate, { weekStartsOn: 2 });
+      setStartDate(weekStart);
+      setEndDate(addDays(weekStart, 6));
+
+      // Find which day of the week the match is on (0-6)
+      const dayDiff = Math.floor(
+        (matchDate.getTime() - weekStart.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      setCurrentDayIndex(dayDiff);
+    } else {
+      // If no previous match, just go to previous week
+      setStartDate(addDays(startDate, -7));
+      setEndDate(addDays(endDate, -7));
+      setCurrentDayIndex(0);
+    }
+  };
+
+  const handleNextArrowMouseDown = () => {
+    if (!showArrows.end) return;
+
+    const timer = setTimeout(() => {
+      findNextMatchDate();
+    }, 2000);
+
+    setLongPressTimer(timer);
+  };
+
+  const handlePrevArrowMouseDown = () => {
+    if (!showArrows.start) return;
+
+    const timer = setTimeout(() => {
+      findPreviousMatchDate();
+    }, 2000);
+
+    setLongPressTimer(timer);
+  };
+
+  const handleArrowMouseUp = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+  };
+
+  // Add touch events for mobile
+  const handleTouchStart = (callback: () => void) => {
+    const timer = setTimeout(callback, 2000);
+    setLongPressTimer(timer);
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+  };
+
+  const handleDateSelect = (date: Date) => {
+    const weekStart = startOfWeek(date, { weekStartsOn: 2 });
+    setStartDate(weekStart);
+    setEndDate(addDays(weekStart, 6));
+
+    if (isMobile) {
+      // Find which day of the week was selected
+      const dayDiff = Math.floor(
+        (date.getTime() - weekStart.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      setCurrentDayIndex(dayDiff);
+    }
+
+    setIsCalendarOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-secondary text-white py-8 px-4 w-full flex flex-col">
@@ -175,83 +370,231 @@ export default function Index() {
           <img src={kcLogo} alt="Karmine Corp Logo" className="w-16 h-16" />
         </div>
         <div className="w-2/4 flex justify-center">
-          <h1 className="text-3xl font-bold">Karmine Corp Schedule</h1>
+          <h1 className="text-4xl font-bold">Karmine Corp Schedule</h1>
         </div>
         <div className="w-1/4 flex justify-end">
           <div className="flex flex-row items-center space-x-4">
-            <img
-              src={arrow}
-              alt="Arrow"
-              className="w-6 h-6 hover:cursor-pointer hover:scale-105 transition-all duration-150"
-              onClick={() => {
-                // change the start date
-                setStartDate(addDays(startDate, -7));
-                setEndDate(addDays(endDate, -7));
-              }}
-            />
-            <p className="text-gray-400">
-              {format(startDate, "yyyy-MM-dd")} -{" "}
-              {format(endDate, "yyyy-MM-dd")}
+            {!isMobile && (
+              <img
+                src={arrow}
+                alt="Arrow"
+                className={`w-6 h-6 hover:scale-105 transition-all duration-150 ${
+                  !showArrows.start
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer"
+                }`}
+                onClick={() => {
+                  if (showArrows.start) {
+                    setStartDate(addDays(startDate, -7));
+                    setEndDate(addDays(endDate, -7));
+                  }
+                }}
+                onMouseDown={handlePrevArrowMouseDown}
+                onMouseUp={handleArrowMouseUp}
+                onMouseLeave={handleArrowMouseUp}
+                onTouchStart={() => handleTouchStart(findPreviousMatchDate)}
+                onTouchEnd={handleTouchEnd}
+              />
+            )}
+            <p
+              className={`text-gray-400 ${
+                isMobile ? "text-2xl" : ""
+              } cursor-pointer hover:text-primary transition-colors`}
+              onClick={() => setIsCalendarOpen(true)}
+            >
+              {isMobile
+                ? format(weekDaysState[currentDayIndex].date, "yyyy-MM-dd")
+                : `${format(startDate, "yyyy-MM-dd")} - ${format(
+                    endDate,
+                    "yyyy-MM-dd"
+                  )}`}
             </p>
-            <img
-              src={arrow}
-              alt="Arrow"
-              className="w-6 h-6 rotate-180 hover:cursor-pointer hover:scale-105 transition-all duration-150"
-              onClick={() => {
-                setStartDate(addDays(startDate, 7));
-                setEndDate(addDays(endDate, 7));
-              }}
-            />
+            {!isMobile && (
+              <img
+                src={arrow}
+                alt="Arrow"
+                className={`w-6 h-6 rotate-180 hover:scale-105 transition-all duration-150 ${
+                  !showArrows.end
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer"
+                }`}
+                onClick={() => {
+                  if (showArrows.end) {
+                    setStartDate(addDays(startDate, 7));
+                    setEndDate(addDays(endDate, 7));
+                  }
+                }}
+                onMouseDown={handleNextArrowMouseDown}
+                onMouseUp={handleArrowMouseUp}
+                onMouseLeave={handleArrowMouseUp}
+                onTouchStart={() => handleTouchStart(findNextMatchDate)}
+                onTouchEnd={handleTouchEnd}
+              />
+            )}
           </div>
         </div>
       </div>
+
+      {/* Calendar modal */}
+      {isCalendarOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-secondary p-4 rounded-lg border border-gray-700 max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Select a date</h2>
+              <button
+                className="text-gray-400 hover:text-white"
+                onClick={() => setIsCalendarOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <Calendar
+              onSelectDate={handleDateSelect}
+              minDate={new Date(oldestMatch)}
+              maxDate={new Date(newestMatch)}
+              currentDate={
+                isMobile ? weekDaysState[currentDayIndex].date : startDate
+              }
+              onClose={() => setIsCalendarOpen(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Mobile day navigation */}
+      {isMobile && (
+        <div className="flex justify-between items-center mt-8 mb-2">
+          <img
+            src={arrow}
+            alt="Previous Day"
+            className={`w-12 h-12 hover:scale-105 transition-all duration-150 ${
+              currentDayIndex === 0 && !showArrows.start
+                ? "opacity-50 cursor-not-allowed"
+                : "cursor-pointer"
+            }`}
+            onClick={goToPreviousDay}
+            onMouseDown={handlePrevArrowMouseDown}
+            onMouseUp={handleArrowMouseUp}
+            onMouseLeave={handleArrowMouseUp}
+            onTouchStart={() => handleTouchStart(findPreviousMatchDate)}
+            onTouchEnd={handleTouchEnd}
+          />
+          <h2 className="text-4xl font-bold text-primary">
+            {weekDaysState[currentDayIndex].dayName.charAt(0).toUpperCase() +
+              weekDaysState[currentDayIndex].dayName.slice(1)}{" "}
+            {format(weekDaysState[currentDayIndex].date, "dd")}
+          </h2>
+          <img
+            src={arrow}
+            alt="Next Day"
+            className={`w-12 h-12 rotate-180 hover:scale-105 transition-all duration-150 ${
+              currentDayIndex === 6 && !showArrows.end
+                ? "opacity-50 cursor-not-allowed"
+                : "cursor-pointer"
+            }`}
+            onClick={goToNextDay}
+            onMouseDown={handleNextArrowMouseDown}
+            onMouseUp={handleArrowMouseUp}
+            onMouseLeave={handleArrowMouseUp}
+            onTouchStart={() => handleTouchStart(findNextMatchDate)}
+            onTouchEnd={handleTouchEnd}
+          />
+        </div>
+      )}
+
       {/* Display planning with days and matches */}
       <div
         className="flex flex-row items-center justify-center flex-grow"
-        style={{ height: `calc(100vh - 200px)` }}
+        style={{ height: `calc(100vh - ${isMobile ? "300px" : "200px"})` }}
       >
-        {weekDaysState.map((day) => {
-          const todayStartDate = new Date(day.date);
-          todayStartDate.setHours(0, 0, 0, 0);
-          const todayEndDate = new Date(day.date);
-          todayEndDate.setHours(23, 59, 59, 999);
-          const dayMatches = weekMatches.filter((match) => {
-            return (
-              new Date(match.date) >= todayStartDate &&
-              new Date(match.date) <= todayEndDate
-            );
-          });
-          return (
-            <div
-              key={new Date(day.date).getTime()}
-              className="flex flex-col items-center justify-center w-full pt-10 h-full w-1/7"
-            >
-              <div
-                className={`border-l border-t border-gray py-4 h-full w-full flex flex-col items-center space-between ${
-                  new Date(day.date).getTime() ===
-                  new Date(weekDaysState[6].date).getTime()
-                    ? "border-r"
-                    : ""
-                }`}
-              >
-                {/* Display day name and date */}
-                <div className="text-lg font-bold border-b border-gray pb-4 w-full text-center mb-3 text-primary">
-                  {day.dayName} {format(day.date, "dd")}
+        {isMobile
+          ? // Mobile view - show only current day
+            (() => {
+              const day = weekDaysState[currentDayIndex];
+              const todayStartDate = new Date(day.date);
+              todayStartDate.setHours(0, 0, 0, 0);
+              const todayEndDate = new Date(day.date);
+              todayEndDate.setHours(23, 59, 59, 999);
+              const dayMatches = weekMatches.filter((match) => {
+                return (
+                  new Date(match.date) >= todayStartDate &&
+                  new Date(match.date) <= todayEndDate
+                );
+              });
+
+              return (
+                <div
+                  key={new Date(day.date).getTime()}
+                  className="flex flex-col items-center justify-center w-full pt-4 h-full"
+                >
+                  <div className="border border-gray py-4 h-full w-full flex flex-col items-center space-between rounded-lg">
+                    {/* Display matches */}
+                    <div className="flex flex-col items-center justify-center overflow-y-scroll scrollbar-hide w-full">
+                      {dayMatches.length > 0 ? (
+                        dayMatches.map((match) => (
+                          <MatchBox
+                            key={match._id.toString()}
+                            match={match}
+                            onClick={() =>
+                              setIsSidebarOpen(match._id.toString())
+                            }
+                          />
+                        ))
+                      ) : (
+                        <p className="text-gray-400 mt-8">
+                          No matches scheduled
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                {/* Display matches */}
-                <div className="flex flex-col items-center justify-center overflow-y-scroll scrollbar-hide">
-                  {dayMatches.map((match) => (
-                    <MatchBox
-                      key={match._id.toString()}
-                      match={match}
-                      onClick={() => setIsSidebarOpen(match._id.toString())}
-                    />
-                  ))}
+              );
+            })()
+          : // Desktop view - show all days
+            weekDaysState.map((day) => {
+              const todayStartDate = new Date(day.date);
+              todayStartDate.setHours(0, 0, 0, 0);
+              const todayEndDate = new Date(day.date);
+              todayEndDate.setHours(23, 59, 59, 999);
+              const dayMatches = weekMatches.filter((match) => {
+                return (
+                  new Date(match.date) >= todayStartDate &&
+                  new Date(match.date) <= todayEndDate
+                );
+              });
+              return (
+                <div
+                  key={new Date(day.date).getTime()}
+                  className="flex flex-col items-center justify-center w-full pt-10 h-full w-1/7"
+                >
+                  <div
+                    className={`border-l border-t border-gray py-4 h-full w-full flex flex-col items-center space-between ${
+                      new Date(day.date).getTime() ===
+                      new Date(weekDaysState[6].date).getTime()
+                        ? "border-r"
+                        : ""
+                    }`}
+                  >
+                    {/* Display day name and date */}
+                    <div className="text-lg font-bold border-b border-gray pb-4 w-full text-center mb-3 text-primary">
+                      {day.dayName.charAt(0).toUpperCase() +
+                        day.dayName.slice(1)}{" "}
+                      {format(day.date, "dd")}
+                    </div>
+                    {/* Display matches */}
+                    <div className="flex flex-col items-center justify-center overflow-y-scroll scrollbar-hide">
+                      {dayMatches.map((match) => (
+                        <MatchBox
+                          key={match._id.toString()}
+                          match={match}
+                          onClick={() => setIsSidebarOpen(match._id.toString())}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          );
-        })}
+              );
+            })}
       </div>
 
       {/* Footer */}
