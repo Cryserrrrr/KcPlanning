@@ -23,9 +23,16 @@ export async function scrapeLolTeams(teamName: string) {
 
   const url = `https://lol.fandom.com/wiki/${formattedTeamName}`;
 
-  await page.goto(url, {
-    waitUntil: "networkidle2",
-  });
+  try {
+    await page.goto(url, {
+      waitUntil: "networkidle2",
+      timeout: 100000,
+    });
+  } catch (error) {
+    console.log(`🟥 Navigation timeout for ${formattedTeamName}:`);
+    await browser.close();
+    return [];
+  }
 
   console.log("🟩 Going to team page");
 
