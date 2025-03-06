@@ -7,6 +7,8 @@ export async function scrapeLolTeams(teamName: string) {
 
   const page = await browser.newPage();
 
+  console.log("🟩 New page created");
+
   let formattedTeamName = teamName;
   if (teamName === "Ici Japon Corp") {
     formattedTeamName = "Ici_Japon_Corp._Esport";
@@ -24,6 +26,8 @@ export async function scrapeLolTeams(teamName: string) {
     console.log("🟥 Cookie banner not found or already handled");
   }
 
+  console.log("🟩 Cookie banner handled");
+
   // Try multiple possible table selectors
   let table;
   try {
@@ -40,6 +44,8 @@ export async function scrapeLolTeams(teamName: string) {
       return [];
     }
   }
+
+  console.log("🟩 Table found");
 
   if (!table) {
     await browser.close();
@@ -71,16 +77,22 @@ export async function scrapeLolTeams(teamName: string) {
     return players;
   });
 
+  console.log("🟩 Roster found");
+
   if (!roster || roster.length === 0) {
     await browser.close();
     return [];
   }
+
+  console.log("🟩 Filtering roster");
 
   roster = roster
     .filter((player, index, self) => {
       return self.findIndex((t) => t.position === player.position) === index;
     })
     .slice(0, 5);
+
+  console.log("🟩 Roster filtered");
 
   await browser.close();
 
