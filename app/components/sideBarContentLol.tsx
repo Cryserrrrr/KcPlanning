@@ -298,7 +298,7 @@ export default function SidebarContentLol({
             key={caster.name}
             className={`flex flex-row gap-2 ${isMobile ? "text-3xl" : ""}`}
           >
-            <p>{caster.name}</p>
+            <p>{caster.name}:</p>
             <p
               className={`text-primary underline cursor-pointer ${
                 isMobile ? "text-3xl" : ""
@@ -308,6 +308,12 @@ export default function SidebarContentLol({
             </p>
           </div>
         ))}
+        <div
+          className={`flex flex-row gap-2 ${isMobile ? "text-3xl" : ""} mt-2`}
+        >
+          <p>VOD: </p>
+          <p>🚧 Coming soon 🚧</p>
+        </div>
       </div>
 
       {/* Role-based player stats */}
