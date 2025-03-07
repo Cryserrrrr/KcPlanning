@@ -401,6 +401,10 @@ export default function SidebarContentLol({
             View League on Leaguepedia →
           </a>
         </div>
+        <div className="flex flex-col gap-2 mt-2">
+          <h1 className="text-2xl font-bold mb-3">Post-Game Analysis</h1>
+          <p>🚧 Coming soon 🚧</p>
+        </div>
       </div>
     </div>
   );

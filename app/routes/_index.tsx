@@ -40,9 +40,9 @@ export const loader: LoaderFunction = async ({ request }) => {
   const today = new Date();
   const startDay = startOfWeek(today, { weekStartsOn: 2 });
 
-  // Server can't detect browser language, so use null for locale
-  // Client will handle localization
-  const locale = null;
+  // Get language from request headers
+  const acceptLanguage = request.headers.get("accept-language") || "";
+  const locale = acceptLanguage.includes("fr") ? fr : null;
 
   const weekDays = Array.from({ length: 7 }).map((_, index) => {
     const date = addDays(startDay, index);
@@ -134,8 +134,9 @@ export default function Index() {
     }[]
   >(initialWeekDays);
 
-  // Check if device is mobile
+  // Remove client-side localization since it's now handled on the server
   useEffect(() => {
+    // Check if device is mobile
     const checkMobile = () => {
       setIsMobile(isMobileScreen());
     };
@@ -147,24 +148,6 @@ export default function Index() {
       window.removeEventListener("resize", checkMobile);
     };
   }, []);
-
-  // Handle localization on client side
-  useEffect(() => {
-    // Check if we should use French locale
-    const shouldUseFrench = navigator.language.includes("fr");
-
-    if (shouldUseFrench) {
-      // Update weekdays with French locale
-      const localizedWeekDays = initialWeekDays.map((day) => ({
-        ...day,
-        dayName: format(new Date(day.date), "EEEE", { locale: fr }),
-      }));
-      setWeekDays(localizedWeekDays);
-
-      // Also update weekDaysState if needed
-      setWeekDaysState(localizedWeekDays);
-    }
-  }, [initialWeekDays]);
 
   const loadMatchesForPeriod = async (start: Date, end: Date) => {
     const formattedStart = format(start, "yyyy-MM-dd");
@@ -439,8 +422,8 @@ export default function Index() {
                           />
                         ))
                       ) : (
-                        <p className="text-gray-400 mt-8">
-                          No matches scheduled
+                        <p className="text-gray-400 text-2xl mt-8">
+                          No matches for this day
                         </p>
                       )}
                     </div>
