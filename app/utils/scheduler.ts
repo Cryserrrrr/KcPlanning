@@ -8,7 +8,7 @@ export function startScheduler() {
   const now = new Date();
   const nextDay = new Date(now);
   nextDay.setDate(now.getDate() + 1);
-  nextDay.setHours(23, 0, 0, 0);
+  nextDay.setHours(22, 0, 0, 0);
 
   const delay = nextDay.getTime() - now.getTime();
 
@@ -30,7 +30,7 @@ export function startLolResultScheduler() {
   // Lunch it every hour
 
   setInterval(async () => {
-    console.log("🔄 Scraping LFL matches...");
+    console.log("🔄 Scraping Results...");
     await scrapeLolResults();
   }, 60 * 60 * 1000);
 }
