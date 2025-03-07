@@ -57,7 +57,7 @@ export default function Sidebar({ isOpen, onClose, match }: SidebarProps) {
             className={`${isMobile ? "w-20 h-20" : "w-6 h-6"}`}
           />
         </button>
-        <h1 className="text-2xl font-bold">
+        <h1 className={`text-2xl font-bold ${isMobile ? "text-4xl" : ""}`}>
           {karmineCorp?.name} vs {opponent?.name || "TBD"}
         </h1>
         {match?.game === "League of Legends" && (
