@@ -54,7 +54,7 @@ export default function Sidebar({ isOpen, onClose, match }: SidebarProps) {
           <img
             src={closeIcon}
             alt="close"
-            className={`${isMobile ? "w-10 h-10" : "w-6 h-6"}`}
+            className={`${isMobile ? "w-20 h-20" : "w-6 h-6"}`}
           />
         </button>
         <h1 className="text-2xl font-bold">
