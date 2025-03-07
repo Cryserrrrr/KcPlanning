@@ -33,7 +33,7 @@ const MatchBox = ({
   return (
     <div
       className={`flex flex-col gap-2 border border-gray ${
-        isMobile ? "p-3" : "p-1"
+        isMobile ? "p-3" : "p-2"
       } mx-2 w-[96%] ${color}`}
       onClick={onClick}
     >

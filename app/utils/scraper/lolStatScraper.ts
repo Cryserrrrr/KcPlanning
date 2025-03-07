@@ -432,7 +432,7 @@ const getRanking = async (
   const rankingFunction =
     rankingFunctions[league as keyof typeof rankingFunctions];
   if (!rankingFunction) {
-    throw new Error(`No ranking function found for league: ${league}`);
+    return [];
   }
   return await rankingFunction(type, page, currentYear, league);
 };
