@@ -129,10 +129,13 @@ export default function SidebarContentLol({
   );
 
   let leaguepediaUrl = `https://lol.fandom.com/wiki/${match?.league}`;
-  if (match?.league === "LEC" || match?.league === "LFL") {
-    leaguepediaUrl = `https://lol.fandom.com/wiki/${
-      match?.league
-    }/${new Date().getFullYear()}_Season`;
+  if (
+    match?.league === "LEC" ||
+    match?.league === "LFL" ||
+    match?.league === "EMEA Masters"
+  ) {
+    const formatedLeague = match?.league.replace(" ", "_");
+    leaguepediaUrl = `https://lol.fandom.com/wiki/${formatedLeague}/${new Date().getFullYear()}_Season`;
   }
 
   // Tableau des statistiques pour les champions

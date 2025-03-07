@@ -224,9 +224,11 @@ export default function Index() {
     } else if (dateAlreadyLoaded.length > 1) {
       const matches: MatchTypeWithId[] = allMatches.filter(
         (match: MatchTypeWithId) => {
-          return (
-            new Date(match.date) >= startDate && new Date(match.date) <= endDate
-          );
+          const matchDate = new Date(match.date);
+          // Ajuster les heures pour inclure toute la journée du dernier jour
+          const adjustedEndDate = new Date(endDate);
+          adjustedEndDate.setHours(23, 59, 59, 999);
+          return matchDate >= startDate && matchDate <= adjustedEndDate;
         }
       );
       setWeekMatches(matches);
@@ -259,70 +261,6 @@ export default function Index() {
     }
   };
 
-  const findNextMatchDate = () => {
-    const now = new Date();
-    // Sort matches by date
-    const sortedMatches = [...allMatches].sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
-
-    // Find the next match (first match after current date)
-    const nextMatch = sortedMatches.find(
-      (match) => new Date(match.date).getTime() > now.getTime()
-    );
-
-    if (nextMatch) {
-      const matchDate = new Date(nextMatch.date);
-      // Find the start of the week containing this match
-      const weekStart = startOfWeek(matchDate, { weekStartsOn: 2 });
-      setStartDate(weekStart);
-      setEndDate(addDays(weekStart, 6));
-
-      // Find which day of the week the match is on (0-6)
-      const dayDiff = Math.floor(
-        (matchDate.getTime() - weekStart.getTime()) / (1000 * 60 * 60 * 24)
-      );
-      setCurrentDayIndex(dayDiff);
-    } else {
-      // If no upcoming match, just go to next week
-      setStartDate(addDays(startDate, 7));
-      setEndDate(addDays(endDate, 7));
-      setCurrentDayIndex(0);
-    }
-  };
-
-  const findPreviousMatchDate = () => {
-    const now = new Date();
-    // Sort matches by date in reverse order
-    const sortedMatches = [...allMatches].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-
-    // Find the previous match (first match before current date)
-    const prevMatch = sortedMatches.find(
-      (match) => new Date(match.date).getTime() < now.getTime()
-    );
-
-    if (prevMatch) {
-      const matchDate = new Date(prevMatch.date);
-      // Find the start of the week containing this match
-      const weekStart = startOfWeek(matchDate, { weekStartsOn: 2 });
-      setStartDate(weekStart);
-      setEndDate(addDays(weekStart, 6));
-
-      // Find which day of the week the match is on (0-6)
-      const dayDiff = Math.floor(
-        (matchDate.getTime() - weekStart.getTime()) / (1000 * 60 * 60 * 24)
-      );
-      setCurrentDayIndex(dayDiff);
-    } else {
-      // If no previous match, just go to previous week
-      setStartDate(addDays(startDate, -7));
-      setEndDate(addDays(endDate, -7));
-      setCurrentDayIndex(0);
-    }
-  };
-
   const handleDateSelect = (date: Date) => {
     const weekStart = startOfWeek(date, { weekStartsOn: 2 });
     setStartDate(weekStart);
@@ -330,9 +268,10 @@ export default function Index() {
 
     if (isMobile) {
       // Find which day of the week was selected
-      const dayDiff = Math.floor(
+      let dayDiff = Math.floor(
         (date.getTime() - weekStart.getTime()) / (1000 * 60 * 60 * 24)
       );
+
       setCurrentDayIndex(dayDiff);
     }
 

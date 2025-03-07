@@ -32,7 +32,7 @@ const MatchBox = ({
   const color = getMatchColor(match);
   return (
     <div
-      className={`flex flex-col gap-2 border border-gray p-1 mx-2 w-[96%] ${color}`}
+      className={`flex flex-col gap-2 border border-gray p-1 mx-2 w-full ${color}`}
       onClick={onClick}
     >
       <div className="flex flex-row justify-between gap-2">
