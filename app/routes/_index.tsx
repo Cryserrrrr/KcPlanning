@@ -326,11 +326,17 @@ export default function Index() {
       {/* Calendar modal */}
       {isCalendarOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-secondary p-4 rounded-lg border border-gray-700 max-w-md w-full">
+          <div
+            className={`bg-secondary p-4 rounded-lg border border-gray-700 ${
+              isMobile ? "max-w-[80%] w-full" : "max-w-md w-full"
+            }`}
+          >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Select a date</h2>
+              <h2 className={`${isMobile ? "text-2xl" : "text-xl"} font-bold`}>
+                Select a date
+              </h2>
               <button
-                className="text-gray-400 hover:text-white"
+                className="text-gray-400 hover:text-white text-2xl"
                 onClick={() => setIsCalendarOpen(false)}
               >
                 ✕

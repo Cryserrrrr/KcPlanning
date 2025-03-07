@@ -13,6 +13,7 @@ import {
   isAfter,
   isBefore,
 } from "date-fns";
+import { isMobileScreen } from "~/utils/utilsFunctions";
 
 interface CalendarProps {
   onSelectDate: (date: Date) => void;
@@ -31,6 +32,7 @@ export function Calendar({
 }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(currentDate));
   const calendarRef = useRef<HTMLDivElement>(null);
+  const isMobile = isMobileScreen();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -67,7 +69,7 @@ export function Calendar({
         >
           &lt;
         </button>
-        <div className="text-lg font-bold">
+        <div className="text-2xl font-bold">
           {format(currentMonth, "MMMM yyyy")}
         </div>
         <button
@@ -86,7 +88,12 @@ export function Calendar({
     return (
       <div className="grid grid-cols-7 gap-1 mb-2">
         {days.map((day) => (
-          <div key={day} className="text-center text-gray-400 text-sm">
+          <div
+            key={day}
+            className={`text-center text-gray-400 ${
+              isMobile ? "text-2xl py-1" : "text-sm"
+            }`}
+          >
             {day}
           </div>
         ))}
@@ -114,11 +121,13 @@ export function Calendar({
         days.push(
           <div
             key={day.toString()}
-            className={`p-2 text-center cursor-pointer rounded hover:bg-primary hover:bg-opacity-30 ${
+            className={`${
+              isMobile ? "p-3" : "p-2"
+            } text-center cursor-pointer rounded hover:bg-primary hover:bg-opacity-30 ${
               !isSameMonth(day, monthStart) ? "text-gray-600" : ""
             } ${isSameDay(day, currentDate) ? "bg-primary text-white" : ""} ${
               isDisabled ? "opacity-30 cursor-not-allowed" : ""
-            }`}
+            } ${isMobile ? "text-3xl" : ""}`}
             onClick={() => !isDisabled && onSelectDate(cloneDay)}
           >
             {format(day, "d")}
@@ -138,7 +147,10 @@ export function Calendar({
   };
 
   return (
-    <div className="calendar" ref={calendarRef}>
+    <div
+      className={`calendar ${isMobile ? "w-full max-w-[95vw]" : ""}`}
+      ref={calendarRef}
+    >
       {renderHeader()}
       {renderDays()}
       {renderCells()}
