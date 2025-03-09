@@ -1,9 +1,11 @@
-import { scrapeKCMatches } from "./scraper/lolscraper";
+import { scrapeLeagueOfLegendsMatches } from "./scraper/lolscraper";
 import { scrapeLolResults } from "./scraper/lolResultScraper";
 import { scrapeLolStats } from "./scraper/lolStatScraper";
 import { updateTodayMatchesStatus } from "./changeStatus";
+import { scrapeValorantMatches } from "./scraper/valorantScraper";
 
-export function startScheduler() {
+export async function startScheduler() {
+  scrapeKCMatchesScheduler();
   // Lunch it every day at 23:00
   const now = new Date();
   const nextDay = new Date(now);
@@ -19,10 +21,12 @@ export function startScheduler() {
 
 const scrapeKCMatchesScheduler = async () => {
   console.log("🔄 Scraping KC matches...");
-  await scrapeKCMatches();
+  await scrapeLeagueOfLegendsMatches();
+  await scrapeValorantMatches();
   setInterval(async () => {
     console.log("🔄 Scraping KC matches...");
-    await scrapeKCMatches();
+    await scrapeLeagueOfLegendsMatches();
+    await scrapeValorantMatches();
   }, 86400000);
 };
 export function startLolResultScheduler() {

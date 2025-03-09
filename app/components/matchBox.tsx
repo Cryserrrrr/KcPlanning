@@ -53,7 +53,7 @@ const MatchBox = ({
           {match.game}
         </div>
       </div>
-      <div className="flex flex-row justify-between gap-4">
+      <div className="flex flex-row justify-between items-center gap-4">
         <div
           className={`text-sm border border-gray rounded-md p-2 px-4 bg-black/50 flex items-center justify-center ${
             match.score ? "w-1/3" : "w-1/2"
@@ -72,7 +72,7 @@ const MatchBox = ({
             className={isMobile ? "w-[70%] h-[70%] object-contain" : ""}
           />
         </div>
-        {match.score && (
+        {match.score ? (
           <div
             className="flex flex-col justify-center items-center text-center"
             onClick={(e) => {
@@ -83,7 +83,9 @@ const MatchBox = ({
             {isScoreVisible ? (
               <div
                 className={`flex flex-row justify-center items-center ${
-                  isMobile ? "w-[80px] h-[80px] text-5xl" : "w-[50px] h-[50px]"
+                  isMobile
+                    ? "w-[200px] h-[200px] text-5xl"
+                    : "w-[50px] h-[50px]"
                 } z-10`}
               >
                 <div className="text-white text-center">
@@ -92,8 +94,8 @@ const MatchBox = ({
               </div>
             ) : (
               <div
-                className={`flex flex-row justify-center items-center bg-black rounded-md ${
-                  isMobile ? "w-[80px] h-[80px]" : "w-[50px] h-[50px]"
+                className={`flex flex-row justify-center items-center bg-secondary rounded-md ${
+                  isMobile ? "w-[200px] h-[200px]" : "w-[50px] h-[50px]"
                 } z-10`}
               >
                 <img
@@ -103,6 +105,16 @@ const MatchBox = ({
                 />
               </div>
             )}
+          </div>
+        ) : (
+          <div
+            className={`flex flex-col justify-center items-center text-center ${
+              isMobile
+                ? "w-[200px] h-[200px] text-5xl"
+                : "w-[50px] h-[50px] text-sm"
+            } z-10`}
+          >
+            <div className="text-white text-center">Bo{match.rounds}</div>
           </div>
         )}
         <div

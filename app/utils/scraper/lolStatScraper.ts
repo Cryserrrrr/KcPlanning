@@ -73,6 +73,8 @@ export async function scrapeLolStats(
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
+  console.log("🔄 Scraping LOL stats...", teamOneName, teamTwoName);
+
   const formattedTeamOneNameWithUnderscore = teamOneName.replace(/\s+/g, "_");
   const formattedTeamTwoNameWithUnderscore = teamTwoName.replace(/\s+/g, "_");
   let formattedLeagueNameWithUnderscore = "";
@@ -142,7 +144,6 @@ export const getKcStats = async (
     );
 
     if (!otherTeamCells || otherTeamCells.length === 0) {
-      console.log("🟥 No matches found against otherTeam");
       return sidePercentages;
     }
 
@@ -318,107 +319,137 @@ export const getTeamsStats = async (
     }
   } catch (error) {}
 
-  const playerTable = await page.waitForSelector("table.wikitable");
-
-  if (!playerTable) {
-    console.log("🟥 Player table not found");
-    return;
-  }
-
-  // Extract data from all rows, but only specific columns
-  const playerTableData = await playerTable?.evaluate((table) => {
-    const rows = Array.from(table.querySelectorAll("tbody tr"));
-
-    return rows
-      .map((row) => {
-        const cells = Array.from(row.querySelectorAll("td"));
-        return {
-          name: cells[1]?.textContent?.trim() || "",
-          kda: cells[9]?.textContent?.trim() || "",
-          csm: cells[11]?.textContent?.trim() || "",
-          gm: cells[13]?.textContent?.trim() || "",
-          dmgm: cells[15]?.textContent?.trim() || "",
-          kpar: cells[16]?.textContent?.trim() || "",
-          mostPlayedChampion:
-            Array.from(cells[20]?.querySelectorAll("a") || []).map(
-              (a) => a.querySelector("span")?.title?.trim() || ""
-            ) || [],
-        };
-      })
-      .filter((item) => item.name.length > 0);
-  });
-
-  // Find the second table that is in a div containing h3 with span id="By_Champion"
-  const championTableData = await page.evaluate(() => {
-    // Find the span with id="By_Champion"
-    const targetSpan = document.querySelector("span#By_Champion");
-    if (!targetSpan) return undefined;
-
-    // Find the h3 containing this span
-    const h3Element = targetSpan.closest("h3");
-    if (!h3Element) return undefined;
-
-    // Find the div containing this h3
-    let currentElement: Element | null = h3Element;
-    let containerDiv: HTMLDivElement | null = null;
-
-    // Look for the closest div that contains both the h3 and a table
-    while (currentElement && !containerDiv) {
-      const parentElement = currentElement.parentElement as Element | null;
-      if (!parentElement) break;
-
-      currentElement = parentElement;
-      if (
-        currentElement instanceof HTMLDivElement &&
-        currentElement.querySelector("table.wikitable")
-      ) {
-        containerDiv = currentElement;
-      }
-    }
-
-    if (!containerDiv) return undefined;
-
-    const table = containerDiv.querySelector("table.wikitable");
-    if (!table) return undefined;
-
-    const tableLength = Array.from(table.querySelectorAll("tbody tr")).length;
-
-    const rows = Array.from(table.querySelectorAll("tbody tr")).slice(1, 6);
-    const championStats = rows
-      .map((row) => {
-        const cells = Array.from(row.querySelectorAll("td"));
-        return {
-          champion:
-            cells[0]
-              ?.querySelector("span.markup-object-name")
-              ?.textContent?.trim() || "",
-          gamesPlayed: cells[1]?.textContent?.trim() || "",
-          winRate: cells[5]?.textContent?.trim() || "",
-          kda: cells[9]?.textContent?.trim() || "",
-          csm: cells[11]?.textContent?.trim() || "",
-          gm: cells[13]?.textContent?.trim() || "",
-          dmgm: cells[15]?.textContent?.trim() || "",
-          kpar: cells[16]?.textContent?.trim() || "",
-        };
-      })
-      .filter((item) => item.champion.length > 0);
-
-    return { championStats, numberOfChampionsPlayed: tableLength };
-  });
-
-  if (!championTableData) {
+  // Add a check if the page exists or has the expected content
+  const pageNotFound = await page.$("div.noarticletext");
+  if (pageNotFound) {
+    console.log(`🟨 No statistics page found for team: ${teamName}`);
+    await page.close();
     return {
-      playerTableData,
+      playerTableData: [],
       championTableData: [],
       numberOfChampionsPlayed: 0,
     };
   }
 
-  return {
-    playerTableData,
-    championTableData: championTableData.championStats,
-    numberOfChampionsPlayed: championTableData.numberOfChampionsPlayed,
-  };
+  // Use a shorter timeout and handle the case when the table doesn't exist
+  try {
+    const playerTable = await page.waitForSelector("table.wikitable", {
+      timeout: 5000,
+    });
+
+    if (!playerTable) {
+      console.log("🟥 Player table not found");
+      await page.close();
+      return {
+        playerTableData: [],
+        championTableData: [],
+        numberOfChampionsPlayed: 0,
+      };
+    }
+
+    // Extract data from all rows, but only specific columns
+    const playerTableData = await playerTable?.evaluate((table) => {
+      const rows = Array.from(table.querySelectorAll("tbody tr"));
+
+      return rows
+        .map((row) => {
+          const cells = Array.from(row.querySelectorAll("td"));
+          return {
+            name: cells[1]?.textContent?.trim() || "",
+            kda: cells[9]?.textContent?.trim() || "",
+            csm: cells[11]?.textContent?.trim() || "",
+            gm: cells[13]?.textContent?.trim() || "",
+            dmgm: cells[15]?.textContent?.trim() || "",
+            kpar: cells[16]?.textContent?.trim() || "",
+            mostPlayedChampion:
+              Array.from(cells[20]?.querySelectorAll("a") || []).map(
+                (a) => a.querySelector("span")?.title?.trim() || ""
+              ) || [],
+          };
+        })
+        .filter((item) => item.name.length > 0);
+    });
+
+    // Find the second table that is in a div containing h3 with span id="By_Champion"
+    const championTableData = await page.evaluate(() => {
+      // Find the span with id="By_Champion"
+      const targetSpan = document.querySelector("span#By_Champion");
+      if (!targetSpan) return undefined;
+
+      // Find the h3 containing this span
+      const h3Element = targetSpan.closest("h3");
+      if (!h3Element) return undefined;
+
+      // Find the div containing this h3
+      let currentElement: Element | null = h3Element;
+      let containerDiv: HTMLDivElement | null = null;
+
+      // Look for the closest div that contains both the h3 and a table
+      while (currentElement && !containerDiv) {
+        const parentElement = currentElement.parentElement as Element | null;
+        if (!parentElement) break;
+
+        currentElement = parentElement;
+        if (
+          currentElement instanceof HTMLDivElement &&
+          currentElement.querySelector("table.wikitable")
+        ) {
+          containerDiv = currentElement;
+        }
+      }
+
+      if (!containerDiv) return undefined;
+
+      const table = containerDiv.querySelector("table.wikitable");
+      if (!table) return undefined;
+
+      const tableLength = Array.from(table.querySelectorAll("tbody tr")).length;
+
+      const rows = Array.from(table.querySelectorAll("tbody tr")).slice(1, 6);
+      const championStats = rows
+        .map((row) => {
+          const cells = Array.from(row.querySelectorAll("td"));
+          return {
+            champion:
+              cells[0]
+                ?.querySelector("span.markup-object-name")
+                ?.textContent?.trim() || "",
+            gamesPlayed: cells[1]?.textContent?.trim() || "",
+            winRate: cells[5]?.textContent?.trim() || "",
+            kda: cells[9]?.textContent?.trim() || "",
+            csm: cells[11]?.textContent?.trim() || "",
+            gm: cells[13]?.textContent?.trim() || "",
+            dmgm: cells[15]?.textContent?.trim() || "",
+            kpar: cells[16]?.textContent?.trim() || "",
+          };
+        })
+        .filter((item) => item.champion.length > 0);
+
+      return { championStats, numberOfChampionsPlayed: tableLength };
+    });
+
+    if (!championTableData) {
+      return {
+        playerTableData,
+        championTableData: [],
+        numberOfChampionsPlayed: 0,
+      };
+    }
+
+    return {
+      playerTableData,
+      championTableData: championTableData.championStats,
+      numberOfChampionsPlayed: championTableData.numberOfChampionsPlayed,
+    };
+  } catch (error) {
+    console.log(`🟨 Error finding tables for team ${teamName}`);
+    await page.close();
+    return {
+      playerTableData: [],
+      championTableData: [],
+      numberOfChampionsPlayed: 0,
+    };
+  }
 };
 
 const getRanking = async (
@@ -574,7 +605,7 @@ const InternationalEventRanking = async (
     type === "Quarts de finale" ||
     type === "Demi-finales" ||
     type === "Finale" ||
-    type === "Play_ins"
+    type === "Play-ins"
   ) {
     return [];
   }

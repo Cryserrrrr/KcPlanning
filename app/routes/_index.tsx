@@ -2,7 +2,14 @@ import type { MetaFunction, LoaderFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { Match, MatchType } from "~/models/match";
-import { format, startOfWeek, addDays, parseISO, Locale } from "date-fns";
+import {
+  format,
+  startOfWeek,
+  addDays,
+  parseISO,
+  isBefore,
+  isSameDay,
+} from "date-fns";
 import { fr } from "date-fns/locale";
 import kcLogo from "/icons/kc-logo.svg";
 import arrow from "/icons/arrow.svg";
@@ -32,6 +39,7 @@ type LoaderData = {
   endDate: Date;
   oldestMatch: Date;
   newestMatch: Date;
+  futureDates: Date[];
 };
 
 export type MatchTypeWithId = Omit<MatchType, "_id"> & { _id: Types.ObjectId };
@@ -53,6 +61,13 @@ export const loader: LoaderFunction = async ({ request }) => {
     };
   });
 
+  const futureDates = await Match.find({
+    date: { $gte: today },
+  })
+    .select("date -_id")
+    .lean()
+    .then((matches) => matches.map((match) => new Date(match.date)));
+
   const startDate = format(startDay, "yyyy-MM-dd");
   const endDate = format(addDays(startDay, 6), "yyyy-MM-dd");
 
@@ -69,8 +84,14 @@ export const loader: LoaderFunction = async ({ request }) => {
     .sort({ date: 1 })
     .lean()) as unknown as MatchTypeWithId[];
 
-  const oldestMatch = await Match.findOne({}).sort({ date: 1 }).lean();
-  const newestMatch = await Match.findOne({}).sort({ date: -1 }).lean();
+  const oldestMatch = await Match.findOne({})
+    .sort({ date: 1 })
+    .select("date -_id")
+    .lean();
+  const newestMatch = await Match.findOne({})
+    .sort({ date: -1 })
+    .select("date -_id")
+    .lean();
 
   let oldestMatchDate: Date;
   let newestMatchDate: Date;
@@ -93,6 +114,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     endDate: endDateTime,
     oldestMatch: oldestMatchDate,
     newestMatch: newestMatchDate,
+    futureDates,
   });
 };
 
@@ -104,6 +126,7 @@ export default function Index() {
     endDate: initialEndDate,
     oldestMatch,
     newestMatch,
+    futureDates,
   } = useLoaderData<LoaderData>();
   const [startDate, setStartDate] = useState<Date>(new Date(initialStartDate));
   const [endDate, setEndDate] = useState<Date>(new Date(initialEndDate));
@@ -350,6 +373,7 @@ export default function Index() {
                 isMobile ? weekDaysState[currentDayIndex].date : startDate
               }
               onClose={() => setIsCalendarOpen(false)}
+              matchDates={futureDates}
             />
           </div>
         </div>

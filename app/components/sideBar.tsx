@@ -3,6 +3,8 @@ import closeIcon from "/icons/close.svg";
 import SidebarContentLol from "./sideBarContentLol";
 import { isMobileScreen } from "~/utils/utilsFunctions";
 import { useState, useEffect } from "react";
+import SideBarContentValorant from "./sideBarContentValorant";
+
 type SidebarProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -62,6 +64,13 @@ export default function Sidebar({ isOpen, onClose, match }: SidebarProps) {
         </h1>
         {match?.game === "League of Legends" && (
           <SidebarContentLol
+            match={match}
+            karmineCorp={karmineCorp}
+            opponent={opponent}
+          />
+        )}
+        {match?.game === "Valorant" && (
+          <SideBarContentValorant
             match={match}
             karmineCorp={karmineCorp}
             opponent={opponent}

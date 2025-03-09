@@ -22,17 +22,18 @@ export default function App() {
       <head>
         <Meta />
         <Links />
-        <script
-          defer
-          src="https://traffic.kcagenda.com/script.js"
-          data-website-id="1defb980-af92-4f8f-8be6-7da5a74d0b0b"
-        ></script>
+        {process.env.NODE_ENV === "production" && (
+          <script
+            defer
+            src="https://traffic.kcagenda.com/script.js"
+            data-website-id="1defb980-af92-4f8f-8be6-7da5a74d0b0b"
+          ></script>
+        )}
       </head>
       <body>
         <Outlet />
         <ScrollRestoration />
         <Scripts />
-        {/* {process.env.NODE_ENV === "development" && <LiveReload />} */}
       </body>
     </html>
   );

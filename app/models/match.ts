@@ -2,7 +2,7 @@ import mongoose, { InferSchemaType } from "mongoose";
 
 const playerSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  position: { type: String, required: true },
+  position: { type: String, required: false },
   stats: { type: Object, required: false },
 });
 

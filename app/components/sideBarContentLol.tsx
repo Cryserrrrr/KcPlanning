@@ -1,7 +1,7 @@
 import { MatchTypeWithId } from "~/routes/_index";
 import { getChampionImageUrl, isMobileScreen } from "~/utils/utilsFunctions";
 
-type SidebarProps = {
+export type SidebarProps = {
   match: MatchTypeWithId | undefined;
   karmineCorp: any | undefined;
   opponent: any | undefined;
@@ -14,7 +14,9 @@ const RoleStatsTable = ({
   isMobile,
 }: {
   roleName: string;
-  players: { name: string; position: string; stats?: any }[][] | undefined;
+  players:
+    | { name: string; position?: string | null; stats?: any }[][]
+    | undefined;
   isMobile: boolean;
 }) => {
   if (!players) return null;

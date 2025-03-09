@@ -1,6 +1,6 @@
 import { MatchTypeWithId } from "~/routes/_index";
 
-export function correctName(name: string) {
+export function correctLolName(name: string) {
   switch (name) {
     case "Team Liquid Honda":
       return "Team Liquid";
@@ -9,6 +9,17 @@ export function correctName(name: string) {
     default:
       return name;
   }
+}
+
+export function correctValorantName(name: string, league: string) {
+  if (league.includes("Game Changers") && name.includes("Karmine")) {
+    name = "Karmine Corp GC";
+  } else if (league.includes("Challengers") && name.includes("KC")) {
+    name = "Karmine Corp Blue Stars";
+  } else if (name.includes("KOI")) {
+    name = "KOI";
+  }
+  return name;
 }
 
 export function getChampionImageUrl(championName: string) {
@@ -45,11 +56,12 @@ export function isMobileScreen() {
 }
 
 export const getMatchColor = (match: MatchTypeWithId) => {
-  if (match.game === "League of Legends" && match.league === "LFL") {
-    return "bg-gradient-to-t from-indigo-500 to-black";
-  } else if (match.game === "League of Legends" && match.league === "Div2") {
-    return "bg-gradient-to-t from-[#fd30d4]/40 to-[#fd30d4]/10";
-  } else if (match.game === "League of Legends") {
-    return "bg-gradient-to-t from-[#05e4c5]/40 to-[#8ff0e4]/10";
+  switch (match.game) {
+    case "League of Legends":
+      return "bg-gradient-to-t from-[#05e4c5]/40 to-[#8ff0e4]/10";
+    case "Valorant":
+      return "bg-gradient-to-t from-[#d74646]/40 to-[#d74646]/10";
+    default:
+      return "bg-gradient-to-t from-indigo-500 to-black";
   }
 };

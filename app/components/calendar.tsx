@@ -21,6 +21,7 @@ interface CalendarProps {
   maxDate?: Date;
   currentDate?: Date;
   onClose?: () => void;
+  matchDates?: Date[];
 }
 
 export function Calendar({
@@ -29,6 +30,7 @@ export function Calendar({
   maxDate,
   currentDate = new Date(),
   onClose,
+  matchDates = [],
 }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(currentDate));
   const calendarRef = useRef<HTMLDivElement>(null);
@@ -118,6 +120,13 @@ export function Calendar({
           (minDate && isBefore(cloneDay, minDate)) ||
           (maxDate && isAfter(cloneDay, maxDate));
 
+        const hasMatches = matchDates.some((matchDate) =>
+          isSameDay(cloneDay, new Date(matchDate))
+        );
+        const isPast =
+          isBefore(cloneDay, new Date()) && !isSameDay(cloneDay, new Date());
+        const isClickable = hasMatches && !isPast;
+
         days.push(
           <div
             key={day.toString()}
@@ -126,9 +135,9 @@ export function Calendar({
             } text-center cursor-pointer rounded hover:bg-primary hover:bg-opacity-30 ${
               !isSameMonth(day, monthStart) ? "text-gray-600" : ""
             } ${isSameDay(day, currentDate) ? "bg-primary text-white" : ""} ${
-              isDisabled ? "opacity-30 cursor-not-allowed" : ""
+              isDisabled || !isClickable ? "opacity-30 cursor-not-allowed" : ""
             } ${isMobile ? "text-3xl" : ""}`}
-            onClick={() => !isDisabled && onSelectDate(cloneDay)}
+            onClick={() => !isDisabled && isClickable && onSelectDate(cloneDay)}
           >
             {format(day, "d")}
           </div>
