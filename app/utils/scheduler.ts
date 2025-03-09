@@ -21,14 +21,16 @@ export async function startScheduler() {
 
 const scrapeKCMatchesScheduler = async () => {
   console.log("🔄 Scraping KC matches...");
-  await scrapeLeagueOfLegendsMatches();
-  await scrapeValorantMatches();
+  await Promise.all([scrapeLeagueOfLegendsMatches(), scrapeValorantMatches()]);
   setInterval(async () => {
     console.log("🔄 Scraping KC matches...");
-    await scrapeLeagueOfLegendsMatches();
-    await scrapeValorantMatches();
+    await Promise.all([
+      scrapeLeagueOfLegendsMatches(),
+      scrapeValorantMatches(),
+    ]);
   }, 86400000);
 };
+
 export function startLolResultScheduler() {
   //scrapeLolResults();
   // Lunch it every hour

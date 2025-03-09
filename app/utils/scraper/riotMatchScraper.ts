@@ -82,6 +82,8 @@ export const riotEsportScraper = async ({
           let league: string = leagueAndType.split("•")[0].trim();
           if (league === "La Ligue Française") {
             league = "LFL";
+          } else if (league.includes("EMEA")) {
+            league = league.replace("EMEA", "").trim();
           }
           const type: string = leagueAndType.split("•")[1].trim();
 
