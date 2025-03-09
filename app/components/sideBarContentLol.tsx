@@ -308,12 +308,26 @@ export default function SidebarContentLol({
             </p>
           </div>
         ))}
-        <div
-          className={`flex flex-row gap-2 ${isMobile ? "text-3xl" : ""} mt-2`}
-        >
-          <p>VOD: </p>
-          <p>🚧 Coming soon 🚧</p>
-        </div>
+        {/* VOD link */}
+        {match?.status === 2 && (
+          <div
+            className={`flex flex-row gap-2 ${isMobile ? "text-3xl" : ""} mt-2`}
+          >
+            <p>VOD: </p>
+            <p>
+              <a
+                href="https://www.youtube.com/@KarmineCorpVOD/videos"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`text-primary underline cursor-pointer ${
+                  isMobile ? "text-3xl" : ""
+                }`}
+              >
+                https://www.youtube.com/@KarmineCorpVOD/videos
+              </a>
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Role-based player stats */}
