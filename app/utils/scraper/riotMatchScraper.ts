@@ -163,6 +163,7 @@ export const riotEsportScraper = async ({
   // Check if matchs is already in the database
   const existingMatches: MatchType[] = await Match.find({
     date: { $gte: new Date() },
+    game: game,
   });
 
   // If match is already in the database and if the team is not TBD, skip

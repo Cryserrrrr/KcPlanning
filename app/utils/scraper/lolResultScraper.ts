@@ -1,12 +1,13 @@
 import puppeteer from "puppeteer";
 import { connectDB } from "~/db";
 import { Match } from "~/models/match";
+import { correctLolName } from "../utilsFunctions";
 
 type KarmineCorpMatchResultType = {
   teams: {
     name: string;
   }[];
-  score: { team1: number; team2: number } | null;
+  score: { teamOne: number; teamTwo: number } | null;
 };
 
 const LEC_URL: string =
@@ -14,6 +15,15 @@ const LEC_URL: string =
 
 export async function scrapeLolResults(): Promise<void> {
   await connectDB();
+
+  const liveMatches = await Match.find({
+    status: 1,
+    game: { $in: ["League of Legends", "Valorant"] },
+  });
+
+  if (liveMatches.length === 0) {
+    return;
+  }
 
   const browser = await puppeteer.launch({
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
@@ -94,8 +104,8 @@ export async function scrapeLolResults(): Promise<void> {
         ?.textContent?.trim();
 
       const score = {
-        team1: parseInt(score1 || "0"),
-        team2: parseInt(score2 || "0"),
+        teamOne: parseInt(score1 || "0"),
+        teamTwo: parseInt(score2 || "0"),
       };
 
       return {
@@ -109,16 +119,35 @@ export async function scrapeLolResults(): Promise<void> {
     return;
   }
 
+  karmineCorpMatch.teams.forEach((team) => {
+    team.name = correctLolName(team.name);
+  });
+
+  const currentMatchId = liveMatches.find(
+    (match) =>
+      match.teams.some(
+        (team) => team.name === karmineCorpMatch.teams[0].name
+      ) &&
+      match.teams.some((team) => team.name === karmineCorpMatch.teams[1].name)
+  )?.matchId;
+
+  console.log("c1", currentMatchId);
+
+  if (!currentMatchId) {
+    await browser.close();
+    return;
+  }
+
+  console.log(currentMatchId);
+
   await Match.updateOne(
     {
-      $or: [
-        { teams: { $elemMatch: { $eq: karmineCorpMatch.teams[0].name } } },
-        { teams: { $elemMatch: { $eq: karmineCorpMatch.teams[1].name } } },
-      ],
-      status: 1,
+      matchId: currentMatchId,
     },
     { status: 2, score: karmineCorpMatch.score }
   );
+
+  console.log("🟩 Match updated");
 
   await browser.close();
 }

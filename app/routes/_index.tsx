@@ -147,7 +147,14 @@ export default function Index() {
     end: new Date(newestMatch) > endDate,
   });
   const [isMobile, setIsMobile] = useState<boolean>(false);
-  const [currentDayIndex, setCurrentDayIndex] = useState<number>(0);
+  const [currentDayIndex, setCurrentDayIndex] = useState<number>(() => {
+    const today = new Date();
+    const diffInDays = Math.floor(
+      (today.getTime() - new Date(initialStartDate).getTime()) /
+        (1000 * 60 * 60 * 24)
+    );
+    return Math.max(0, Math.min(6, diffInDays));
+  });
   const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
   const [weekDaysState, setWeekDaysState] = useState<
     {
