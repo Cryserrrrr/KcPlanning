@@ -13,7 +13,7 @@ type KarmineCorpMatchResultType = {
 const LEC_URL: string =
   "https://lolesports.com/fr-FR/leagues/emea_masters,first_stand,lec,lfl,msi,worlds";
 
-export async function scrapeLolResults(): Promise<void> {
+export async function scrapeRiotResults(): Promise<void> {
   await connectDB();
 
   const liveMatches = await Match.find({

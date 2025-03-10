@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import puppeteer from "puppeteer";
 import { connectDB } from "~/db";
-import { scrapeLolResults } from "./lolResultScraper";
+import { scrapeRiotResults } from "./riotResultScraper";
 import { Match } from "~/models/match";
 
 // Mock dependencies
@@ -9,7 +9,7 @@ vi.mock("puppeteer");
 vi.mock("~/db");
 vi.mock("~/models/match");
 
-describe("scrapeLolResults", () => {
+describe("scrapeRiotResults", () => {
   let mockBrowser: any;
   let mockPage: any;
   let mockContainerDiv: any;
@@ -50,17 +50,17 @@ describe("scrapeLolResults", () => {
   });
 
   it("should connect to the database", async () => {
-    await scrapeLolResults();
+    await scrapeRiotResults();
     expect(connectDB).toHaveBeenCalled();
   });
 
   it("should launch puppeteer browser", async () => {
-    await scrapeLolResults();
+    await scrapeRiotResults();
     expect(puppeteer.launch).toHaveBeenCalled();
   });
 
   it("should navigate to the LEC URL", async () => {
-    await scrapeLolResults();
+    await scrapeRiotResults();
     expect(mockPage.goto).toHaveBeenCalledWith(
       "https://lolesports.com/fr-FR/leagues/emea_masters,first_stand,lec,lfl,msi,worlds",
       { waitUntil: "networkidle2" }
@@ -70,14 +70,14 @@ describe("scrapeLolResults", () => {
   it("should return early if container div is not found", async () => {
     mockPage.waitForSelector.mockResolvedValue(null);
 
-    await scrapeLolResults();
+    await scrapeRiotResults();
 
     expect(Match.updateOne).not.toHaveBeenCalled();
     expect(mockBrowser.close).toHaveBeenCalled();
   });
 
   it("should return early if no Karmine Corp match is found", async () => {
-    await scrapeLolResults();
+    await scrapeRiotResults();
 
     expect(Match.updateOne).not.toHaveBeenCalled();
     expect(mockBrowser.close).toHaveBeenCalled();
@@ -91,7 +91,7 @@ describe("scrapeLolResults", () => {
 
     mockContainerDiv.evaluate.mockResolvedValue(mockMatch);
 
-    await scrapeLolResults();
+    await scrapeRiotResults();
 
     expect(Match.updateOne).toHaveBeenCalledWith(
       {
@@ -115,7 +115,7 @@ describe("scrapeLolResults", () => {
 
     mockContainerDiv.evaluate.mockResolvedValue(mockMatch);
 
-    await scrapeLolResults();
+    await scrapeRiotResults();
 
     expect(Match.updateOne).toHaveBeenCalledWith(
       {
@@ -130,7 +130,7 @@ describe("scrapeLolResults", () => {
   });
 
   it("should close the browser after processing", async () => {
-    await scrapeLolResults();
+    await scrapeRiotResults();
 
     expect(mockBrowser.close).toHaveBeenCalled();
   });
@@ -142,7 +142,7 @@ describe("scrapeLolResults", () => {
     // Spy on console.error
     vi.spyOn(console, "error").mockImplementation(() => {});
 
-    await scrapeLolResults();
+    await scrapeRiotResults();
 
     // Verify browser is closed even when error occurs
     expect(mockBrowser.close).toHaveBeenCalled();
@@ -152,7 +152,7 @@ describe("scrapeLolResults", () => {
     // Mock a timeout error
     mockPage.waitForFunction.mockRejectedValue(new Error("Timeout exceeded"));
 
-    await scrapeLolResults();
+    await scrapeRiotResults();
 
     expect(mockBrowser.close).toHaveBeenCalled();
     expect(Match.updateOne).not.toHaveBeenCalled();
@@ -166,7 +166,7 @@ describe("scrapeLolResults", () => {
 
     mockContainerDiv.evaluate.mockResolvedValue(mockMatch);
 
-    await scrapeLolResults();
+    await scrapeRiotResults();
 
     expect(Match.updateOne).toHaveBeenCalledWith(
       {
@@ -185,7 +185,7 @@ describe("scrapeLolResults", () => {
 
     mockContainerDiv.evaluate.mockResolvedValue(mockMatch);
 
-    await scrapeLolResults();
+    await scrapeRiotResults();
 
     expect(Match.updateOne).toHaveBeenCalledWith(
       {

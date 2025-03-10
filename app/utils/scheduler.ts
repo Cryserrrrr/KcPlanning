@@ -1,5 +1,5 @@
 import { scrapeLeagueOfLegendsMatches } from "./scraper/lolscraper";
-import { scrapeLolResults } from "./scraper/lolResultScraper";
+import { scrapeRiotResults } from "./scraper/riotResultScraper";
 import { scrapeLolStats } from "./scraper/lolStatScraper";
 import { updateTodayMatchesStatus } from "./changeStatus";
 import { scrapeValorantMatches } from "./scraper/valorantScraper";
@@ -93,7 +93,7 @@ async function checkLiveMatchesStatus() {
 async function checkAndScrapeResults() {
   try {
     console.log("🔄 Scraping match results...");
-    await scrapeLolResults();
+    await scrapeRiotResults();
   } catch (error) {
     console.error("Error scraping results:", error);
   }
