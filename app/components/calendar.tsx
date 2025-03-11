@@ -66,7 +66,7 @@ export function Calendar({
       <div className="flex justify-between items-center mb-4">
         <button
           onClick={prevMonth}
-          className="p-2 rounded hover:bg-gray-700"
+          className="p-2 rounded hover:bg-gray-700 disabled:opacity-50"
           disabled={minDate && isBefore(startOfMonth(currentMonth), minDate)}
         >
           &lt;
@@ -76,7 +76,7 @@ export function Calendar({
         </div>
         <button
           onClick={nextMonth}
-          className="p-2 rounded hover:bg-gray-700"
+          className="p-2 rounded hover:bg-gray-700 disabled:opacity-50"
           disabled={maxDate && isAfter(endOfMonth(currentMonth), maxDate)}
         >
           &gt;
@@ -116,16 +116,14 @@ export function Calendar({
     while (day <= endDate) {
       for (let i = 0; i < 7; i++) {
         const cloneDay = day;
-        const isDisabled =
-          (minDate && isBefore(cloneDay, minDate)) ||
-          (maxDate && isAfter(cloneDay, maxDate));
+        const isDisabled = minDate && isBefore(cloneDay, minDate);
 
         const hasMatches = matchDates.some((matchDate) =>
           isSameDay(cloneDay, new Date(matchDate))
         );
         const isPast =
           isBefore(cloneDay, new Date()) && !isSameDay(cloneDay, new Date());
-        const isClickable = hasMatches && !isPast;
+        const isClickable = (hasMatches && !isPast) || (!isDisabled && isPast);
 
         days.push(
           <div

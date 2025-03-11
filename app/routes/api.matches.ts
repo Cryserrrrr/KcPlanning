@@ -13,7 +13,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   // Vérification de la méthode HTTP
   if (request.method !== "GET") {
-    return json({ error: "Méthode non autorisée" }, { status: 405 });
+    return json({ error: "Method not allowed" }, { status: 405 });
   }
 
   const url = new URL(request.url);
@@ -21,30 +21,23 @@ export const loader: LoaderFunction = async ({ request }) => {
   const endDate = url.searchParams.get("endDate");
 
   if (!startDate || !endDate) {
-    return json(
-      { error: "Les dates de début et de fin sont requises" },
-      { status: 400 }
-    );
+    return json({ error: "Start and end dates are required" }, { status: 400 });
   }
 
   // Validation du format des dates
   if (!isValidDate(startDate) || !isValidDate(endDate)) {
-    return json({ error: "Format de date invalide" }, { status: 400 });
+    return json({ error: "Invalid date format" }, { status: 400 });
   }
 
-  // Limiter la plage de dates à une période raisonnable (ex: max 3 mois)
   const startDateTime = new Date(startDate);
   startDateTime.setUTCHours(0, 0, 0, 0);
 
   const endDateTime = new Date(endDate);
   endDateTime.setUTCHours(23, 59, 59, 999);
 
-  const maxRangeMs = 90 * 24 * 60 * 60 * 1000; // 90 jours en millisecondes
+  const maxRangeMs = 7 * 24 * 60 * 60 * 1000;
   if (endDateTime.getTime() - startDateTime.getTime() > maxRangeMs) {
-    return json(
-      { error: "La plage de dates ne peut pas dépasser 90 jours" },
-      { status: 400 }
-    );
+    return json({ error: "Date range is too long" }, { status: 400 });
   }
 
   try {
@@ -56,7 +49,7 @@ export const loader: LoaderFunction = async ({ request }) => {
       .lean();
 
     process.env.NODE_ENV === "development" &&
-      console.log(`${matches.length} matchs trouvés`);
+      console.log(`${matches.length} matches found`);
 
     return json(matches, {
       headers: {
@@ -67,11 +60,8 @@ export const loader: LoaderFunction = async ({ request }) => {
       },
     });
   } catch (error) {
-    console.error("Erreur lors de la récupération des matchs:", error);
-    return json(
-      { error: "Erreur lors de la récupération des matchs" },
-      { status: 500 }
-    );
+    console.error("Error fetching matches:", error);
+    return json({ error: "Error fetching matches" }, { status: 500 });
   }
 };
 

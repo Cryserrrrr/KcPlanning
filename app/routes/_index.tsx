@@ -137,7 +137,6 @@ export default function Index() {
   const [dateAlreadyLoaded, setDateAlreadyLoaded] = useState<Date[]>([
     startDate,
   ]);
-  const [weekDays, setWeekDays] = useState(initialWeekDays);
   const [isSidebarOpen, setIsSidebarOpen] = useState<string | null>(null);
   const [showArrows, setShowArrows] = useState<{
     start: boolean;
@@ -164,7 +163,6 @@ export default function Index() {
     }[]
   >(initialWeekDays);
 
-  // Remove client-side localization since it's now handled on the server
   useEffect(() => {
     // Check if device is mobile
     const checkMobile = () => {
@@ -201,10 +199,11 @@ export default function Index() {
 
         const matches: MatchTypeWithId[] = newMatches.filter(
           (match: MatchTypeWithId) => {
-            return (
-              new Date(match.date) >= startDate &&
-              new Date(match.date) <= endDate
-            );
+            const matchDate = new Date(match.date);
+            // Create a copy of endDate with time set to end of day
+            const adjustedEndDate = new Date(endDate);
+            adjustedEndDate.setHours(23, 59, 59, 999);
+            return matchDate >= startDate && matchDate <= adjustedEndDate;
           }
         );
         setWeekMatches(matches);
@@ -227,7 +226,7 @@ export default function Index() {
       return {
         date,
         formattedDate: date,
-        dayName: weekDays[index].dayName,
+        dayName: initialWeekDays[index].dayName,
       };
     });
     setWeekDaysState(tempWeekDaysState);
@@ -238,7 +237,7 @@ export default function Index() {
       const matches: MatchTypeWithId[] = allMatches.filter(
         (match: MatchTypeWithId) => {
           const matchDate = new Date(match.date);
-          // Ajuster les heures pour inclure toute la journée du dernier jour
+          // Always adjust endDate to include the full day
           const adjustedEndDate = new Date(endDate);
           adjustedEndDate.setHours(23, 59, 59, 999);
           return matchDate >= startDate && matchDate <= adjustedEndDate;
