@@ -139,7 +139,6 @@ const updateMatchesStatusScheduler = async () => {
 };
 
 const updateLolStatsScheduler = async () => {
-  updateLolStats();
   // Update stats all days at 02:00
   const now = new Date();
   const nextDay = new Date(now);
