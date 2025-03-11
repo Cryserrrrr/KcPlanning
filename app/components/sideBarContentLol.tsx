@@ -205,7 +205,7 @@ const ChampionStatsTable = ({
                     isMobile ? "text-2xl" : ""
                   }`}
                 >
-                  {player.stats.mostPlayedChampion.map(
+                  {player.stats?.mostPlayedChampion.map(
                     (champion: string, index: number) => (
                       <img
                         key={index}
@@ -464,7 +464,7 @@ export default function SidebarContentLol({
                       {key === "win" || key === "lose" || key === "percentage"
                         ? `${
                             standing.series[key as keyof typeof standing.series]
-                          }%`
+                          }${key === "percentage" ? "%" : ""}`
                         : key === "teamName"
                         ? standing[key as keyof typeof standing].toString()
                         : standing[key as keyof typeof standing]}

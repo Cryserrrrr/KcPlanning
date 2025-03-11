@@ -20,13 +20,6 @@ const scoreSchema = new mongoose.Schema({
   teamTwo: { type: Number, required: true },
 });
 
-const rankingDataSchema = new mongoose.Schema({
-  position: { type: String, required: true },
-  teamName: { type: String, required: true },
-  regionName: { type: String, required: true },
-  series: { type: Object, required: true },
-});
-
 const matchSchema = new mongoose.Schema(
   {
     teams: [teamSchema],
@@ -39,7 +32,7 @@ const matchSchema = new mongoose.Schema(
     score: { type: scoreSchema, required: false }, // Ex: { teamOne: 1, teamTwo: 0 }
     rounds: { type: Number, required: true }, // Ex: 3
     casters: [{ type: Object, required: true }],
-    rankingData: { type: [rankingDataSchema], required: false },
+    rankingData: { type: Array, required: false },
     kcStats: { type: Object, required: false },
   },
   { timestamps: true }

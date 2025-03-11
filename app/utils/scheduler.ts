@@ -5,12 +5,20 @@ import { updateTodayMatchesStatus } from "./changeStatus";
 import { scrapeValorantMatches } from "./scraper/valorantScraper";
 import { connectDB } from "~/db";
 import { Match } from "~/models/match";
+import { updateLolStats } from "./updateLolStats";
 
 let liveMatchesInterval: NodeJS.Timeout | null = null;
 let hasLiveMatches = false;
 let isCheckingLiveMatches = false;
 
 export async function startScheduler() {
+  updateLolStatsScheduler();
+  startMatchesScheduler();
+  startChangeStatusScheduler();
+  startLolResultScheduler();
+}
+
+async function startMatchesScheduler() {
   // Lunch it every day at 23:00
   const now = new Date();
   const nextDay = new Date(now);
@@ -36,7 +44,7 @@ const scrapeKCMatchesScheduler = async () => {
   }, 86400000);
 };
 
-export function startLolResultScheduler() {
+function startLolResultScheduler() {
   // Initial check
   checkLiveMatchesStatus();
 
@@ -100,12 +108,12 @@ async function checkAndScrapeResults() {
 }
 
 // Only for testing
-export function startLolStatScheduler() {
-  scrapeLolStats("Solary", "Karmine Corp Blue", "First Stand", "Tour 1");
-  return;
-}
+// function startLolStatScheduler() {
+//   scrapeLolStats("Solary", "Karmine Corp Blue", "First Stand", "Tour 1");
+//   return;
+// }
 
-export function startChangeStatusScheduler() {
+function startChangeStatusScheduler() {
   // lunch it every hour at 01 minutes
   const now = new Date();
   const nextHour = new Date(now);
@@ -128,4 +136,20 @@ const updateMatchesStatusScheduler = async () => {
     console.log("🔄 Changing status of matches...");
     await updateTodayMatchesStatus();
   }, 60 * 60 * 1000);
+};
+
+const updateLolStatsScheduler = async () => {
+  updateLolStats();
+  // Update stats all days at 02:00
+  const now = new Date();
+  const nextDay = new Date(now);
+  nextDay.setDate(now.getDate() + 1);
+  nextDay.setHours(2, 0, 0, 0);
+
+  const delay = nextDay.getTime() - now.getTime();
+
+  setTimeout(async () => {
+    console.log("🔄 Updating LOL stats...");
+    await updateLolStats();
+  }, delay);
 };
