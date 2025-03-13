@@ -13,11 +13,7 @@ const teamSchema = new mongoose.Schema({
   players: [playerSchema],
   stats: { type: Object, required: false },
   numberOfChampionsPlayed: { type: Number, required: false },
-});
-
-const scoreSchema = new mongoose.Schema({
-  teamOne: { type: Number, required: true },
-  teamTwo: { type: Number, required: true },
+  score: { type: Number, required: false },
 });
 
 const matchSchema = new mongoose.Schema(
@@ -29,7 +25,6 @@ const matchSchema = new mongoose.Schema(
     game: { type: String, required: true }, // Ex: "League of Legends"
     type: { type: String, required: true }, // Ex: "Playoffs"
     status: { type: Number, required: true }, // Ex: 0, 1, 2
-    score: { type: scoreSchema, required: false }, // Ex: { teamOne: 1, teamTwo: 0 }
     rounds: { type: Number, required: true }, // Ex: 3
     casters: [{ type: Object, required: true }],
     rankingData: { type: Array, required: false },

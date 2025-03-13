@@ -59,6 +59,7 @@ function startLolResultScheduler() {
 }
 
 async function checkLiveMatchesStatus() {
+  //await scrapeRiotResults();
   try {
     isCheckingLiveMatches = true;
     await connectDB();

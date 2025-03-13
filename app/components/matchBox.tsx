@@ -56,7 +56,7 @@ const MatchBox = ({
       <div className="flex flex-row justify-between items-center gap-4">
         <div
           className={`text-sm border border-gray rounded-md p-2 px-4 bg-black/50 flex items-center justify-center ${
-            match.score ? "w-1/3" : "w-1/2"
+            match.teams[0].score !== null ? "w-1/3" : "w-1/2"
           } relative ${isMobile ? "p-4" : ""}`}
         >
           <div
@@ -72,7 +72,7 @@ const MatchBox = ({
             className={isMobile ? "w-[70%] h-[70%] object-contain" : ""}
           />
         </div>
-        {match.score ? (
+        {match.teams[0].score !== null ? (
           <div
             className="flex flex-col justify-center items-center text-center"
             onClick={(e) => {
@@ -89,7 +89,7 @@ const MatchBox = ({
                 } z-10`}
               >
                 <div className="text-white text-center">
-                  {match.score?.teamOne} - {match.score?.teamTwo}
+                  {match.teams[0].score} - {match.teams[1].score}
                 </div>
               </div>
             ) : (
@@ -119,7 +119,7 @@ const MatchBox = ({
         )}
         <div
           className={`text-sm border border-gray rounded-md p-2 px-4 bg-black/50 flex items-center justify-center ${
-            match.score ? "w-1/3" : "w-1/2"
+            match.teams[1].score !== null ? "w-1/3" : "w-1/2"
           } relative ${isMobile ? "p-4" : ""}`}
         >
           <div

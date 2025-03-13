@@ -17,9 +17,9 @@ export type MatchType = {
     players: { position: string | null; name: string; stats?: any | null }[];
     stats?: any | null;
     numberOfChampionsPlayed?: number | null;
+    score?: number | null;
   }[];
   seriesType: string;
-  score: { team1: number; team2: number } | null;
   league: string;
   type: string;
   game: string;

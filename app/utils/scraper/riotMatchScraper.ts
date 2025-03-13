@@ -95,13 +95,14 @@ export const riotEsportScraper = async ({
             name: string;
             logoUrl: string;
             players: { position: string; name: string }[];
+            score?: number | null;
           }[] = Array.from(teamElements).map((team: Element) => {
             const acronym: string = team.textContent?.trim() || "";
             const imageElement: HTMLImageElement | null =
               team.querySelector("img");
             let name: string = imageElement?.getAttribute("alt")?.trim() || "";
             const logoUrl: string = imageElement?.getAttribute("src") || "";
-            return { acronym, name, logoUrl, players: [] };
+            return { acronym, name, logoUrl, players: [], score: null };
           });
 
           const seriesInfo: string =
@@ -120,7 +121,6 @@ export const riotEsportScraper = async ({
             date,
             teams,
             seriesType: seriesInfo,
-            score: null,
             league,
             type,
             game: gameType,

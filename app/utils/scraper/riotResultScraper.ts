@@ -7,7 +7,10 @@ type KarmineCorpMatchResultType = {
   teams: {
     name: string;
   }[];
-  score: { teamOne: number; teamTwo: number } | null;
+  score: {
+    teamOne: { name: string; score: number };
+    teamTwo: { name: string; score: number };
+  } | null;
 };
 
 const LEC_URL: string =
@@ -104,8 +107,14 @@ export async function scrapeRiotResults(): Promise<void> {
         ?.textContent?.trim();
 
       const score = {
-        teamOne: parseInt(score1 || "0"),
-        teamTwo: parseInt(score2 || "0"),
+        teamOne: {
+          name: teams[0].name,
+          score: parseInt(score1 || "0"),
+        },
+        teamTwo: {
+          name: teams[1].name,
+          score: parseInt(score2 || "0"),
+        },
       };
 
       return {
@@ -131,20 +140,28 @@ export async function scrapeRiotResults(): Promise<void> {
       match.teams.some((team) => team.name === karmineCorpMatch.teams[1].name)
   )?.matchId;
 
-  console.log("c1", currentMatchId);
-
-  if (!currentMatchId) {
+  if (!currentMatchId || !karmineCorpMatch.score) {
     await browser.close();
     return;
   }
-
-  console.log(currentMatchId);
 
   await Match.updateOne(
     {
       matchId: currentMatchId,
     },
-    { status: 2, score: karmineCorpMatch.score }
+    {
+      status: 2,
+      $set: {
+        "teams.$[team1].score": karmineCorpMatch.score.teamOne.score,
+        "teams.$[team2].score": karmineCorpMatch.score.teamTwo.score,
+      },
+    },
+    {
+      arrayFilters: [
+        { "team1.name": karmineCorpMatch.score.teamOne.name },
+        { "team2.name": karmineCorpMatch.score.teamTwo.name },
+      ],
+    }
   );
 
   console.log("🟩 Match updated");
