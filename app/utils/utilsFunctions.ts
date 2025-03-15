@@ -6,6 +6,8 @@ export function correctLolName(name: string) {
       return "Team Liquid";
     case "TOPESPORTS":
       return "Top Esports";
+    case "E Wie Einfach E-Sports":
+      return name.toUpperCase();
     default:
       return name;
   }

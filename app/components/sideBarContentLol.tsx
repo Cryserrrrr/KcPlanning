@@ -47,7 +47,11 @@ const RoleStatsTable = ({
         </thead>
         <tbody>
           {players?.map((teamPlayers, teamIndex) => {
+            if (!teamPlayers || teamPlayers.length === 0) return null;
+
             const player = teamPlayers[0];
+            if (!player) return null;
+
             const opposingTeamPlayers = players[teamIndex === 0 ? 1 : 0];
             const opposingPlayer = opposingTeamPlayers?.[0];
 
@@ -58,7 +62,7 @@ const RoleStatsTable = ({
                     isMobile ? "text-2xl" : ""
                   }`}
                 >
-                  {player.name}
+                  {player?.name || "Unknown"}
                 </td>
                 {/* Map through each stat and highlight if better than opponent */}
                 {statKeys.map((statKey, i) => {
@@ -76,7 +80,7 @@ const RoleStatsTable = ({
                         shouldHighlight ? "bg-primary" : ""
                       } ${isMobile ? "text-2xl" : ""}`}
                     >
-                      {player.stats?.[statKey] || "-"}
+                      {player.stats?.[statKey] || "No Data"}
                     </td>
                   );
                 })}
@@ -153,7 +157,7 @@ const ChampionStatsTable = ({
                     isMobile ? "text-2xl" : ""
                   }`}
                 >
-                  {champion[statKey] || "-"}
+                  {champion[statKey] || "No Data"}
                 </td>
               ))}
             </tr>
@@ -198,23 +202,25 @@ const ChampionStatsTable = ({
                     isMobile ? "text-2xl" : ""
                   }`}
                 >
-                  {player.name}
+                  {player?.name}
                 </td>
                 <td
                   className={`px-4 py-2 border border-gray-300 flex flex-row gap-2 h-full justify-center items-center ${
                     isMobile ? "text-2xl" : ""
                   }`}
                 >
-                  {player.stats?.mostPlayedChampion.map(
-                    (champion: string, index: number) => (
-                      <img
-                        key={index}
-                        src={getChampionImageUrl(champion)}
-                        alt={champion}
-                        className={`${isMobile ? "w-12 h-12" : "w-8 h-8"}`}
-                      />
-                    )
-                  )}
+                  {player.stats?.mostPlayedChampion
+                    ? player.stats.mostPlayedChampion.map(
+                        (champion: string, index: number) => (
+                          <img
+                            key={index}
+                            src={getChampionImageUrl(champion)}
+                            alt={champion}
+                            className={`${isMobile ? "w-12 h-12" : "w-8 h-8"}`}
+                          />
+                        )
+                      )
+                    : "No Data"}
                 </td>
               </tr>
             ))}
@@ -233,11 +239,19 @@ export default function SidebarContentLol({
 }: SidebarProps) {
   // Helper function to get players by position
   const getPlayersByPosition = (position: string) => {
-    return match?.teams
+    if (!match?.teams) return undefined;
+
+    return match.teams
       .map((team) =>
         team.players.filter((player) => player.position === position)
       )
-      .sort((a, b) => (a[0].name === "Karmine Corp" ? 1 : -1));
+      .sort((a, b) => {
+        // Check if arrays have elements and if they have name properties
+        if (a.length === 0 || b.length === 0) return 0;
+        if (!a[0]?.name || !b[0]?.name) return 0;
+
+        return a[0].name === "Karmine Corp" ? 1 : -1;
+      });
   };
 
   const isMobile = isMobileScreen();
@@ -316,17 +330,12 @@ export default function SidebarContentLol({
             className={`flex flex-row gap-2 ${isMobile ? "text-3xl" : ""} mt-2`}
           >
             <p>VOD: </p>
-            <p>
-              <a
-                href="https://www.youtube.com/@KarmineCorpVOD/videos"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`text-primary underline cursor-pointer ${
-                  isMobile ? "text-3xl" : ""
-                }`}
-              >
-                https://www.youtube.com/@KarmineCorpVOD/videos
-              </a>
+            <p
+              className={`text-primary underline cursor-pointer ${
+                isMobile ? "text-3xl" : ""
+              }`}
+            >
+              https://www.youtube.com/@KarmineCorpVOD/videos
             </p>
           </div>
         )}
