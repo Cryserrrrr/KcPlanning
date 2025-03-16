@@ -31,9 +31,20 @@ export const riotMatchScraper = async ({
   );
 
   const dataPromise = new Promise<any[]>((resolve) => {
+    // Add request interception for debugging
+    page.on("request", (request) => {
+      const requestUrl = request.url();
+      if (requestUrl.includes("operationName=homeEvents")) {
+        console.log("DEBUG - Request URL:", requestUrl);
+      }
+    });
+
     page.on("response", async (response) => {
       const responseUrl: string = response.url();
-      if (responseUrl.includes("operationName=homeEvents")) {
+      if (
+        responseUrl.includes("operationName=homeEvents") &&
+        responseUrl.includes("leagues")
+      ) {
         console.log("🔄 Scraping new Riot Esport matches... intercepted");
         try {
           const responseData: any = await response.json();
@@ -53,8 +64,6 @@ export const riotMatchScraper = async ({
     setTimeout(() => resolve([]), 10000)
   );
   eventsData = await Promise.race([dataPromise, timeoutPromise]);
-
-  console.log("🔄 Scraping new Riot Esport matches... done", eventsData);
 
   await browser.close();
 
