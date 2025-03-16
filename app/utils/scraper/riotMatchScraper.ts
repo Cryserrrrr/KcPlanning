@@ -33,10 +33,11 @@ export const riotMatchScraper = async ({
 
   const page = await browser.newPage();
 
-  // Ajouter un user-agent pour éviter la détection
   await page.setUserAgent(
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
   );
+
+  await page.goto(url, { waitUntil: "networkidle2" });
 
   let eventsData: any[] = [];
   let intercepted = false;
@@ -61,23 +62,13 @@ export const riotMatchScraper = async ({
     });
   });
 
-  try {
-    await page.goto(url, { waitUntil: "networkidle2", timeout: 30000 });
-
-    await page.evaluate(
-      () => new Promise((resolve) => setTimeout(resolve, 5000))
-    );
-  } catch (error) {
-    console.error("Error navigating to page:", error);
-  }
-
   const timeoutPromise = new Promise<any[]>((resolve) =>
     setTimeout(() => {
       if (!intercepted) {
         console.log("Timeout reached without intercepting data");
       }
       resolve([]);
-    }, 30000)
+    }, 60000)
   );
 
   eventsData = await Promise.race([dataPromise, timeoutPromise]);
