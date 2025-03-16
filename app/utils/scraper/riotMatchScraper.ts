@@ -44,6 +44,8 @@ export const riotMatchScraper = async ({
     });
   });
 
+  console.log("data", dataPromise);
+
   await page.goto(url, { waitUntil: "networkidle2" });
 
   const timeoutPromise = new Promise<any[]>((resolve) =>
