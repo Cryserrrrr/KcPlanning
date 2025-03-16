@@ -19,28 +19,11 @@ export const riotMatchScraper = async ({
   url: string;
 }) => {
   const browser = await puppeteer.launch({
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-accelerated-2d-canvas",
-      "--no-first-run",
-      "--no-zygote",
-      "--disable-gpu",
-    ],
-    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
   const page = await browser.newPage();
-
-  await page.setUserAgent(
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-  );
-
-  await page.goto(url, { waitUntil: "networkidle2" });
-
   let eventsData: any[] = [];
-  let intercepted = false;
 
   const dataPromise = new Promise<any[]>((resolve) => {
     page.on("response", async (response) => {
@@ -50,7 +33,6 @@ export const riotMatchScraper = async ({
         responseUrl.includes("leagues")
       ) {
         try {
-          intercepted = true;
           const responseData: any = await response.json();
           if (responseData.data?.esports?.events) {
             resolve(responseData.data.esports.events);
@@ -62,26 +44,19 @@ export const riotMatchScraper = async ({
     });
   });
 
-  const timeoutPromise = new Promise<any[]>((resolve) =>
-    setTimeout(() => {
-      if (!intercepted) {
-        console.log("Timeout reached without intercepting data");
-      }
-      resolve([]);
-    }, 60000)
-  );
+  await page.goto(url, { waitUntil: "networkidle2" });
 
+  const timeoutPromise = new Promise<any[]>((resolve) =>
+    setTimeout(() => resolve([]), 10000)
+  );
   eventsData = await Promise.race([dataPromise, timeoutPromise]);
+
+  console.log("🔄 Scraping new Riot Esport matches... done", eventsData);
 
   await browser.close();
 
   if (eventsData.length === 0) {
     console.log("No events data intercepted");
-    if (intercepted) {
-      console.log("Data was intercepted but was empty");
-    } else {
-      console.log("No data was intercepted at all");
-    }
     return [];
   }
 
