@@ -19,11 +19,27 @@ export const riotMatchScraper = async ({
   url: string;
 }) => {
   const browser = await puppeteer.launch({
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-accelerated-2d-canvas",
+      "--no-first-run",
+      "--no-zygote",
+      "--disable-gpu",
+    ],
+    headless: true,
   });
 
   const page = await browser.newPage();
+
+  // Ajouter un user-agent pour éviter la détection
+  await page.setUserAgent(
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+  );
+
   let eventsData: any[] = [];
+  let intercepted = false;
 
   const dataPromise = new Promise<any[]>((resolve) => {
     page.on("response", async (response) => {
@@ -33,6 +49,7 @@ export const riotMatchScraper = async ({
         responseUrl.includes("leagues")
       ) {
         try {
+          intercepted = true;
           const responseData: any = await response.json();
           if (responseData.data?.esports?.events) {
             resolve(responseData.data.esports.events);
@@ -44,19 +61,33 @@ export const riotMatchScraper = async ({
     });
   });
 
-  console.log("data", dataPromise);
+  try {
+    await page.goto(url, { waitUntil: "networkidle2", timeout: 30000 });
+  } catch (error) {
+    console.error("Error navigating to page:", error);
+  }
 
-  await page.goto(url, { waitUntil: "networkidle2" });
-
+  // Augmenter le timeout à 30 secondes
   const timeoutPromise = new Promise<any[]>((resolve) =>
-    setTimeout(() => resolve([]), 10000)
+    setTimeout(() => {
+      if (!intercepted) {
+        console.log("Timeout reached without intercepting data");
+      }
+      resolve([]);
+    }, 30000)
   );
+
   eventsData = await Promise.race([dataPromise, timeoutPromise]);
 
   await browser.close();
 
   if (eventsData.length === 0) {
     console.log("No events data intercepted");
+    if (intercepted) {
+      console.log("Data was intercepted but was empty");
+    } else {
+      console.log("No data was intercepted at all");
+    }
     return [];
   }
 
