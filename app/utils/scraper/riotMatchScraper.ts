@@ -19,8 +19,14 @@ export const riotMatchScraper = async ({
   url: string;
 }) => {
   const browser = await puppeteer.launch({
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    headless: true,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-blink-features=AutomationControlled",
+      "--disable-web-security",
+      "--disable-dev-shm-usage",
+      "--window-size=1920,1080",
+    ],
   });
 
   const page = await browser.newPage();
