@@ -33,7 +33,7 @@ export const riotMatchScraper = async ({
   const dataPromise = new Promise<any[]>((resolve) => {
     page.on("response", async (response) => {
       const responseUrl: string = response.url();
-      if (responseUrl.includes("leagues")) {
+      if (responseUrl.includes("operationName=homeEvents")) {
         console.log("🔄 Scraping new Riot Esport matches... intercepted");
         try {
           const responseData: any = await response.json();
