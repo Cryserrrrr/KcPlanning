@@ -12,5 +12,5 @@ jobs:
       - name: 🔑 Securised call to Remix API
         run: |
           curl -X POST \
-          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          -H "Authorization: Bearer ${{ secrets.SCRAPER_SECRET }}" \
           https://kcagenda.com/api/tasks/scrape-matches
