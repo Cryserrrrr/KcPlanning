@@ -20,10 +20,15 @@ export const riotMatchScraper = async ({
 }) => {
   const browser = await puppeteer.launch({
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    headless: true,
   });
 
   const page = await browser.newPage();
   let eventsData: any[] = [];
+
+  await page.setUserAgent(
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  );
 
   const dataPromise = new Promise<any[]>((resolve) => {
     page.on("response", async (response) => {
@@ -44,7 +49,7 @@ export const riotMatchScraper = async ({
     });
   });
 
-  await page.goto(url, { waitUntil: "networkidle2" });
+  await page.goto(url, { waitUntil: "networkidle2", timeout: 30000 });
 
   const timeoutPromise = new Promise<any[]>((resolve) =>
     setTimeout(() => resolve([]), 10000)
