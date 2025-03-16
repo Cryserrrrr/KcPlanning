@@ -5,6 +5,7 @@ import { scrapeValorantMatches } from "~/utils/scraper/valorantScraper";
 
 export const action: ActionFunction = async ({ request }) => {
   const authHeader = request.headers.get("Authorization");
+  console.log("🔄 Scraping matches...", authHeader);
   if (!authHeader) {
     return json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
@@ -13,8 +14,10 @@ export const action: ActionFunction = async ({ request }) => {
   }
   try {
     console.log("🔄 Scraping matches...");
-    await scrapeLeagueOfLegendsMatches();
-    await scrapeValorantMatches();
+    await Promise.all([
+      scrapeLeagueOfLegendsMatches(),
+      scrapeValorantMatches(),
+    ]);
     return json({ success: true }, { status: 200 });
   } catch (error) {
     return json(
