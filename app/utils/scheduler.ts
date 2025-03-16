@@ -13,37 +13,9 @@ let isCheckingLiveMatches = false;
 
 export async function startScheduler() {
   updateLolStatsScheduler();
-  startMatchesScheduler();
   startChangeStatusScheduler();
   startLolResultScheduler();
 }
-
-async function startMatchesScheduler() {
-  scrapeKCMatchesScheduler();
-  // Lunch it every day at 23:00
-  const now = new Date();
-  const nextDay = new Date(now);
-  nextDay.setDate(now.getDate() + 1);
-  nextDay.setHours(22, 0, 0, 0);
-
-  const delay = nextDay.getTime() - now.getTime();
-
-  setTimeout(async () => {
-    scrapeKCMatchesScheduler();
-  }, delay);
-}
-
-const scrapeKCMatchesScheduler = async () => {
-  console.log("🔄 Scraping KC matches...");
-  await Promise.all([scrapeLeagueOfLegendsMatches(), scrapeValorantMatches()]);
-  setInterval(async () => {
-    console.log("🔄 Scraping KC matches...");
-    await Promise.all([
-      scrapeLeagueOfLegendsMatches(),
-      scrapeValorantMatches(),
-    ]);
-  }, 86400000);
-};
 
 function startLolResultScheduler() {
   // Initial check

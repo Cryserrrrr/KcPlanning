@@ -1,0 +1,14 @@
+name: "🚀 Development - Scraping Cron"
+
+on:
+  workflow_dispatch: # Optionnal manual trigger
+
+jobs:
+  cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔑 Securised call to Remix API
+        run: |
+          curl -X POST \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          http://localhost:5173/api/tasks/scrape-matches

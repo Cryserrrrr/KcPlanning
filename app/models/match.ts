@@ -21,6 +21,7 @@ const matchSchema = new mongoose.Schema(
     teams: [teamSchema],
     date: { type: Date, required: true }, // Ex: "2025-02-23"
     league: { type: String, required: true }, // Ex: "LEC"
+    leagueLogoUrl: { type: String, required: false },
     matchId: { type: String, required: true, unique: true },
     game: { type: String, required: true }, // Ex: "League of Legends"
     type: { type: String, required: true }, // Ex: "Playoffs"

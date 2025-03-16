@@ -32,7 +32,7 @@ const MatchBox = ({
   const color = getMatchColor(match);
   return (
     <div
-      className={`flex flex-col gap-2 border border-gray ${
+      className={`flex flex-col gap-2 mb-2 border border-gray ${
         isMobile ? "p-3" : "p-2"
       } mx-2 w-[96%] ${color}`}
       onClick={onClick}
@@ -43,7 +43,15 @@ const MatchBox = ({
             isMobile ? "text-4xl p-6 mb-2 mr-2" : "p-2 px-4 text-sm"
           }`}
         >
-          {league}
+          {match.leagueLogoUrl ? (
+            <img
+              src={match.leagueLogoUrl}
+              alt={league}
+              className="w-6 h-6 object-contain"
+            />
+          ) : (
+            league
+          )}
         </div>
         <div
           className={`border border-gray rounded-md p-2 w-full text-center bg-black/50 flex items-center justify-center ${

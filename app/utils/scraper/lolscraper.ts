@@ -6,21 +6,22 @@ import { Types } from "mongoose";
 import { Match } from "~/models/match";
 import { KcStats, RankingData, scrapeLolStats } from "./lolStatScraper";
 import { ScrapingResult } from "./lolStatScraper";
-import { riotEsportScraper } from "./riotMatchScraper";
+import { riotMatchScraper } from "./riotMatchScraper";
+
+type teamsType = {
+  acronym: string;
+  name: string;
+  logoUrl: string;
+  players: { position: string | null; name: string; stats?: any | null }[];
+  stats?: any | null;
+  numberOfChampionsPlayed?: number | null;
+  score?: number | null;
+};
 
 export type MatchType = {
   matchId: Types.ObjectId | null;
   date: Date;
-  teams: {
-    acronym: string;
-    name: string;
-    logoUrl: string;
-    players: { position: string | null; name: string; stats?: any | null }[];
-    stats?: any | null;
-    numberOfChampionsPlayed?: number | null;
-    score?: number | null;
-  }[];
-  seriesType: string;
+  teams: teamsType[];
   league: string;
   type: string;
   game: string;
@@ -43,7 +44,7 @@ const LEC_URL: string =
 export async function scrapeLeagueOfLegendsMatches(): Promise<void> {
   await connectDB();
 
-  const matchesToAdd: (MatchType | null)[] = await riotEsportScraper({
+  const matchesToAdd: (MatchType | null)[] = await riotMatchScraper({
     game: "League of Legends",
     url: LEC_URL,
   });

@@ -1,34 +1,8 @@
 import { connectDB } from "~/db";
 import { scrapeValorantTeams } from "./valorantTeamScraper";
-import { Caster as CasterType } from "~/models/caster";
-import { Types } from "mongoose";
 import { Match } from "~/models/match";
-import { KcStats, RankingData } from "./lolStatScraper";
-import { riotEsportScraper } from "./riotMatchScraper";
-import { PlayerType } from "./lolscraper";
-
-export type MatchType = {
-  matchId: Types.ObjectId | null;
-  date: Date;
-  teams: {
-    acronym: string;
-    name: string;
-    logoUrl: string;
-    players: { position: string | null; name: string; stats?: any | null }[];
-    stats?: any | null;
-    numberOfChampionsPlayed?: number | null;
-    score?: number | null;
-  }[];
-  seriesType: string;
-  league: string;
-  type: string;
-  game: string;
-  status: number;
-  rounds: number;
-  casters?: CasterType[] | null;
-  rankingData?: RankingData[] | null;
-  kcStats?: KcStats | null;
-};
+import { MatchType, PlayerType } from "./lolscraper";
+import { riotMatchScraper } from "./riotMatchScraper";
 
 const VAL_URL: string =
   "https://valorantesports.com/en-GB/leagues/challengers_emea,game_changers_championship,game_changers_emea,vct_emea,vct_masters,vrl_france";
@@ -36,7 +10,7 @@ const VAL_URL: string =
 export async function scrapeValorantMatches(): Promise<void> {
   await connectDB();
 
-  const matchesToAdd: (MatchType | null)[] = await riotEsportScraper({
+  const matchesToAdd: (MatchType | null)[] = await riotMatchScraper({
     game: "Valorant",
     url: VAL_URL,
   });

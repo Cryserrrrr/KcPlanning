@@ -1,0 +1,16 @@
+name: "🚀 Production - Scraping Cron"
+
+on:
+  schedule:
+    - cron: "0 12,23 * * *"
+  workflow_dispatch:
+
+jobs:
+  cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔑 Securised call to Remix API
+        run: |
+          curl -X POST \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          https://kcagenda.com/api/tasks/scrape-matches
