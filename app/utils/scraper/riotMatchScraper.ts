@@ -63,11 +63,14 @@ export const riotMatchScraper = async ({
 
   try {
     await page.goto(url, { waitUntil: "networkidle2", timeout: 30000 });
+
+    await page.evaluate(
+      () => new Promise((resolve) => setTimeout(resolve, 5000))
+    );
   } catch (error) {
     console.error("Error navigating to page:", error);
   }
 
-  // Augmenter le timeout à 30 secondes
   const timeoutPromise = new Promise<any[]>((resolve) =>
     setTimeout(() => {
       if (!intercepted) {
