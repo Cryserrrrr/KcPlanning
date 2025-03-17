@@ -27,6 +27,7 @@ export const riotMatchScraper = async ({
       "--disable-dev-shm-usage",
       "--window-size=1920,1080",
     ],
+    headless: true,
   });
 
   const page = await browser.newPage();
@@ -42,6 +43,10 @@ export const riotMatchScraper = async ({
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
   );
 
+  await page.goto(url, { waitUntil: "networkidle2" });
+
+  await new Promise((resolve) => setTimeout(resolve, 5000));
+
   const dataPromise = new Promise<any[]>((resolve) => {
     // Add request interception for debugging
     page.on("request", (request) => {
@@ -53,7 +58,11 @@ export const riotMatchScraper = async ({
 
     page.on("response", async (response) => {
       const responseUrl: string = response.url();
-      if (responseUrl.includes("api/gql")) {
+      if (
+        responseUrl.includes("api/gql") &&
+        responseUrl.includes("operationName=homeEvents") &&
+        responseUrl.includes("leagues")
+      ) {
         console.log("🔄 Scraping new Riot Esport matches... intercepted");
         try {
           const responseData: any = await response.json();
@@ -65,9 +74,16 @@ export const riotMatchScraper = async ({
         }
       }
     });
-  });
 
-  await page.goto(url, { waitUntil: "networkidle2", timeout: 30000 });
+    page.waitForResponse((response) => {
+      const responseUrl = response.url();
+      return (
+        responseUrl.includes("api/gql") &&
+        responseUrl.includes("operationName=homeEvents") &&
+        responseUrl.includes("leagues")
+      );
+    });
+  });
 
   const timeoutPromise = new Promise<any[]>((resolve) =>
     setTimeout(() => resolve([]), 10000)

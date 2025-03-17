@@ -22,7 +22,7 @@ export async function scrapeLolTeams(teamName: string) {
       timeout: 30000,
     });
   } catch (error) {
-    console.log(`🟥 Navigation timeout for ${formattedTeamName}:`);
+    console.log(`🟥 Navigation timeout for ${formattedTeamName}`);
     await browser.close();
     return [];
   }
