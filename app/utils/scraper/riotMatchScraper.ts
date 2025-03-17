@@ -46,7 +46,7 @@ export const riotMatchScraper = async ({
     // Add request interception for debugging
     page.on("request", (request) => {
       const requestUrl = request.url();
-      if (requestUrl.includes("operationName=homeEvents")) {
+      if (requestUrl.includes("api/gql")) {
         console.log("DEBUG - Request URL:", requestUrl);
       }
     });
