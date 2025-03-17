@@ -25,7 +25,6 @@ export const riotMatchScraper = async ({
       "--disable-blink-features=AutomationControlled",
       "--disable-web-security",
       "--disable-dev-shm-usage",
-      "--window-size=1920,1080",
     ],
     headless: true,
   });
@@ -37,13 +36,9 @@ export const riotMatchScraper = async ({
     Object.defineProperty(navigator, "webdriver", { get: () => false });
   });
 
-  await page.setViewport({ width: 1920, height: 1080 });
-
   await page.setUserAgent(
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
   );
-
-  await page.goto(url, { waitUntil: "networkidle2" });
 
   await new Promise((resolve) => setTimeout(resolve, 5000));
 
@@ -84,6 +79,8 @@ export const riotMatchScraper = async ({
       );
     });
   });
+
+  await page.goto(url, { waitUntil: "networkidle2" });
 
   const timeoutPromise = new Promise<any[]>((resolve) =>
     setTimeout(() => resolve([]), 10000)
