@@ -43,6 +43,17 @@ export const riotMatchScraper = async ({
   );
 
   try {
+    // Intercepter toutes les requêtes réseau
+    await page.setRequestInterception(true);
+
+    page.on("request", (request) => {
+      // Enregistrer les URLs des requêtes GraphQL
+      if (request.url().includes("/api/gql")) {
+        console.log("API Request URL:", request.url());
+      }
+      request.continue();
+    });
+
     await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
 
     eventsData = await page.evaluate((gameSport) => {
@@ -100,10 +111,8 @@ export const riotMatchScraper = async ({
             console.error(`Response not OK: ${response.statusText}`);
             return response.text().then((text) => {
               console.error("Error response body:", text);
-              throw new Error(`HTTP error ${response.status}: ${text}`);
+              console.log("Response", response.url);
             });
-          } else {
-            console.log("Response", response);
           }
           return response.json();
         })
