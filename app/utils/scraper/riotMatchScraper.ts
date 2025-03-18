@@ -31,7 +31,6 @@ export const riotMatchScraper = async ({
       "--disable-gpu",
     ],
     headless: false,
-    timeout: 60000,
   });
 
   const page = await browser.newPage();
@@ -42,10 +41,6 @@ export const riotMatchScraper = async ({
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
   );
 
-  // Augmenter les timeouts
-  await page.setDefaultNavigationTimeout(60000);
-  await page.setDefaultTimeout(60000);
-
   // Activer les logs de console du navigateur
   page.on("console", (msg) =>
     console.log("Console du navigateur:", msg.text())
@@ -55,10 +50,7 @@ export const riotMatchScraper = async ({
     // Navigate to page first to set context
     console.log(`⏳ Navigation vers ${url}...`);
     await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
-    console.log("✅ Navigation terminée");
 
-    // Make direct API request from page context instead of intercepting
-    console.log("🔄 Scraping new Riot Esport matches...");
     eventsData = await page.evaluate((gameSport) => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -146,6 +138,7 @@ export const riotMatchScraper = async ({
     eventsData = [];
   } finally {
     console.log("🔚 Fermeture du navigateur");
+    await new Promise((resolve) => setTimeout(resolve, 60000));
     await browser.close();
   }
 
