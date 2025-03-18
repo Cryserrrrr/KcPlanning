@@ -35,14 +35,14 @@ export const riotMatchScraper = async ({
   const page = await browser.newPage();
   let eventsData: any[] = [];
 
+  page.on("console", (msg) => console.log("Page console:", msg.text()));
+
   // Configurer un user-agent réaliste
   await page.setUserAgent(
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
   );
 
   try {
-    // Navigate to page first to set context
-    console.log(`⏳ Navigation vers ${url}...`);
     await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
 
     eventsData = await page.evaluate((gameSport) => {
