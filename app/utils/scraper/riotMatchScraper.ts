@@ -40,11 +40,6 @@ export const riotMatchScraper = async ({
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
   );
 
-  // Activer les logs de console du navigateur
-  page.on("console", (msg) =>
-    console.log("Console du navigateur:", msg.text())
-  );
-
   try {
     // Navigate to page first to set context
     console.log(`⏳ Navigation vers ${url}...`);
