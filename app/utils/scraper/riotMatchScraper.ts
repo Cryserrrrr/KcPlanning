@@ -79,6 +79,8 @@ export const riotMatchScraper = async ({
       const variables = {
         hl: "fr-FR",
         sport: gameSport === "League of Legends" ? "lol" : "val",
+        leagueIds:
+          gameSport === "League of Legends" ? lolLeagues : valorantLeagues,
         eventDateStart: startDate,
         eventDateEnd: endDateStr,
         eventState: ["unstarted"],
