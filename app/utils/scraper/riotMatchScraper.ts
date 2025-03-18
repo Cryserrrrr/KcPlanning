@@ -110,8 +110,10 @@ export const riotMatchScraper = async ({
           if (!response.ok) {
             console.error(`Response not OK: ${response.statusText}`);
             return response.text().then((text) => {
-              console.error("Error response body:", text);
-              console.log("Response", response.url);
+              if (!text.includes("border-radius:2px;")) {
+                console.error("Error response body:", text);
+                console.log("Response", response.url);
+              }
             });
           }
           return response.json();
