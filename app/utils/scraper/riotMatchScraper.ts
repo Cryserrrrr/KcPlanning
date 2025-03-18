@@ -18,19 +18,47 @@ export const riotMatchScraper = async ({
   game: string;
   url: string;
 }) => {
+  console.log("🚀 Démarrage du scraper avec:", { game, url });
+
   const browser = await puppeteer.launch({
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-accelerated-2d-canvas",
+      "--no-first-run",
+      "--no-zygote",
+      "--disable-gpu",
+    ],
+    headless: false,
+    timeout: 60000,
   });
 
   const page = await browser.newPage();
   let eventsData: any[] = [];
 
-  // Navigate to page first to set context
-  await page.goto(url, { waitUntil: "networkidle2" });
+  // Configurer un user-agent réaliste
+  await page.setUserAgent(
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+  );
 
-  // Make direct API request from page context instead of intercepting
-  console.log("🔄 Scraping new Riot Esport matches...");
+  // Augmenter les timeouts
+  await page.setDefaultNavigationTimeout(60000);
+  await page.setDefaultTimeout(60000);
+
+  // Activer les logs de console du navigateur
+  page.on("console", (msg) =>
+    console.log("Console du navigateur:", msg.text())
+  );
+
   try {
+    // Navigate to page first to set context
+    console.log(`⏳ Navigation vers ${url}...`);
+    await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
+    console.log("✅ Navigation terminée");
+
+    // Make direct API request from page context instead of intercepting
+    console.log("🔄 Scraping new Riot Esport matches...");
     eventsData = await page.evaluate((gameSport) => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -114,11 +142,12 @@ export const riotMatchScraper = async ({
       `✅ API request completed, retrieved ${eventsData?.length || 0} events`
     );
   } catch (error) {
-    console.error("❌ Error fetching events data:", error);
+    console.error("❌ Erreur critique dans le scraper:", error);
     eventsData = [];
+  } finally {
+    console.log("🔚 Fermeture du navigateur");
+    await browser.close();
   }
-
-  browser.close();
 
   if (eventsData.length === 0) {
     console.log("No events data retrieved");
