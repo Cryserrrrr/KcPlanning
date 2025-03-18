@@ -104,11 +104,20 @@ export const riotMatchScraper = async ({
         '{"persistedQuery":{"version":1,"sha256Hash":"089916a64423fe9796f6e81b30e9bda7e329366a5b06029748c610a8e486d23f"}}'
       )}`;
 
-      return fetch(apiUrl)
+      return fetch(apiUrl, {
+        headers: {
+          "Content-Type": "application/json",
+          "apollographql-client-name": "Esports Web",
+          "apollographql-client-version": "bc60ebf",
+          accept: "*/*",
+          pragma: "no-cache",
+          "cache-control": "no-cache",
+          "x-apollo-operation-name": "homeEvents",
+        },
+      })
         .then((response) => {
           console.log(`Response status: ${response.status}`);
           if (!response.ok) {
-            console.error(`Response not OK: ${response.statusText}`);
             return response.text().then((text) => {
               if (!text.includes("border-radius:2px;")) {
                 console.error("Error response body:", text);
