@@ -30,7 +30,6 @@ export const riotMatchScraper = async ({
       "--no-zygote",
       "--disable-gpu",
     ],
-    headless: false,
   });
 
   const page = await browser.newPage();
@@ -138,7 +137,6 @@ export const riotMatchScraper = async ({
     eventsData = [];
   } finally {
     console.log("🔚 Fermeture du navigateur");
-    await new Promise((resolve) => setTimeout(resolve, 60000));
     await browser.close();
   }
 
