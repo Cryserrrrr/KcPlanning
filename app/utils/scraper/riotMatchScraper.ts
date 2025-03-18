@@ -19,71 +19,109 @@ export const riotMatchScraper = async ({
   url: string;
 }) => {
   const browser = await puppeteer.launch({
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-blink-features=AutomationControlled",
-      "--disable-web-security",
-      "--disable-dev-shm-usage",
-    ],
-    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
   const page = await browser.newPage();
   let eventsData: any[] = [];
 
-  await page.evaluateOnNewDocument(() => {
-    Object.defineProperty(navigator, "webdriver", { get: () => false });
-  });
-
-  await page.setUserAgent(
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
-  );
-
-  await page.setExtraHTTPHeaders({
-    "Accept-Language": "fr-FR",
-  });
-
-  const dataPromise = new Promise<any[]>((resolve) => {
-    // Add request interception for debugging
-    page.on("request", (request) => {
-      const requestUrl = request.url();
-      if (requestUrl.includes("api/gql")) {
-        console.log("DEBUG - Request URL:", requestUrl);
-      }
-    });
-
-    page.on("response", async (response) => {
-      const responseUrl: string = response.url();
-      if (
-        responseUrl.includes("api/gql") &&
-        responseUrl.includes("operationName=homeEvents") &&
-        responseUrl.includes("leagues")
-      ) {
-        console.log("🔄 Scraping new Riot Esport matches... intercepted");
-        try {
-          const responseData: any = await response.json();
-          if (responseData.data?.esports?.events) {
-            resolve(responseData.data.esports.events);
-          }
-        } catch (error) {
-          console.error("Error parsing response:", error);
-        }
-      }
-    });
-  });
-
+  // Navigate to page first to set context
   await page.goto(url, { waitUntil: "networkidle2" });
 
-  const timeoutPromise = new Promise<any[]>(
-    (resolve) => setTimeout(() => resolve([]), 60000) // Changed from 10000 to 30000 (30 seconds)
-  );
-  eventsData = await Promise.race([dataPromise, timeoutPromise]);
+  // Make direct API request from page context instead of intercepting
+  console.log("🔄 Scraping new Riot Esport matches...");
+  try {
+    eventsData = await page.evaluate((gameSport) => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const startDate = today.toISOString();
 
-  await browser.close();
+      const endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + 2);
+      endDate.setHours(endDate.getHours() + 1);
+      const endDateStr = endDate.toISOString();
+
+      const valorantLeagues = [
+        "106109559530232966",
+        "107019646737643925",
+        "107566807613828723",
+        "109222784797127274",
+        "109940824119741550",
+        "113991317635212236",
+      ];
+
+      const lolLeagues = [
+        "100695891328981122",
+        "105266103462388553",
+        "113464388705111224",
+        "98767975604431411",
+        "98767991302996019",
+        "98767991325878492",
+      ];
+      const variables = {
+        hl: "fr-FR",
+        sport: gameSport === "League of Legends" ? "lol" : "val",
+        leagues:
+          gameSport === "League of Legends" ? lolLeagues : valorantLeagues,
+        eventDateStart: startDate,
+        eventDateEnd: endDateStr,
+        eventState: ["unstarted"],
+        eventType: "match",
+        pageSize: 40,
+      };
+
+      const domain =
+        gameSport === "League of Legends"
+          ? "https://lolesports.com"
+          : "https://valorantesports.com";
+
+      const apiUrl = `${domain}/api/gql?operationName=homeEvents&variables=${encodeURIComponent(
+        JSON.stringify(variables)
+      )}&extensions=${encodeURIComponent(
+        '{"persistedQuery":{"version":1,"sha256Hash":"089916a64423fe9796f6e81b30e9bda7e329366a5b06029748c610a8e486d23f"}}'
+      )}`;
+
+      return fetch(apiUrl)
+        .then((response) => {
+          console.log(`Response status: ${response.status}`);
+          if (!response.ok) {
+            console.error(`Response not OK: ${response.statusText}`);
+            return response.text().then((text) => {
+              console.error("Error response body:", text);
+              throw new Error(`HTTP error ${response.status}: ${text}`);
+            });
+          }
+          return response.json();
+        })
+        .then((data) => {
+          if (data?.data?.esports?.events) {
+            console.log(`Found ${data.data.esports.events.length} events`);
+            return data.data.esports.events;
+          }
+          console.log(
+            "No events found in response:",
+            JSON.stringify(data).substring(0, 200) + "..."
+          );
+          return [];
+        })
+        .catch((error) => {
+          console.error("Fetch error:", error);
+          return [];
+        });
+    }, game);
+
+    console.log(
+      `✅ API request completed, retrieved ${eventsData?.length || 0} events`
+    );
+  } catch (error) {
+    console.error("❌ Error fetching events data:", error);
+    eventsData = [];
+  }
+
+  browser.close();
 
   if (eventsData.length === 0) {
-    console.log("No events data intercepted");
+    console.log("No events data retrieved");
     return [];
   }
 

@@ -5,7 +5,7 @@ import { MatchType, PlayerType } from "./lolscraper";
 import { riotMatchScraper } from "./riotMatchScraper";
 
 const VAL_URL: string =
-  "https://valorantesports.com/en-GB/leagues/challengers_emea,game_changers_championship,game_changers_emea,vct_emea,vct_masters,vrl_france";
+  "https://valorantesports.com/fr-FR/leagues/challengers_emea,game_changers_championship,game_changers_emea,vct_emea,vct_masters,vrl_france";
 
 export async function scrapeValorantMatches(): Promise<void> {
   await connectDB();
