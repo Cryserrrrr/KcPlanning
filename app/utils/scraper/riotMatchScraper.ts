@@ -47,17 +47,6 @@ export const riotMatchScraper = async ({
   );
 
   try {
-    // Intercepter toutes les requêtes réseau
-    await page.setRequestInterception(true);
-
-    page.on("request", (request) => {
-      // Enregistrer les URLs des requêtes GraphQL
-      if (request.url().includes("/api/gql")) {
-        console.log("API Request URL:", request.url());
-      }
-      request.continue();
-    });
-
     await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
 
     eventsData = await page.evaluate((gameSport) => {
@@ -147,7 +136,9 @@ export const riotMatchScraper = async ({
     }, game);
 
     console.log(
-      `✅ API request completed, retrieved ${eventsData?.length || 0} events`
+      `✅ API request completed, retrieved ${
+        eventsData?.length || 0
+      } events for ${game}`
     );
   } catch (error) {
     console.error("❌ Erreur critique dans le scraper:", error);
