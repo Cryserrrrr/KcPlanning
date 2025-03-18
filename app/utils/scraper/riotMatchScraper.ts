@@ -75,8 +75,6 @@ export const riotMatchScraper = async ({
       const variables = {
         hl: "fr-FR",
         sport: gameSport === "League of Legends" ? "lol" : "val",
-        leagues:
-          gameSport === "League of Legends" ? lolLeagues : valorantLeagues,
         eventDateStart: startDate,
         eventDateEnd: endDateStr,
         eventState: ["unstarted"],
@@ -104,6 +102,8 @@ export const riotMatchScraper = async ({
               console.error("Error response body:", text);
               throw new Error(`HTTP error ${response.status}: ${text}`);
             });
+          } else {
+            console.log("Response", response);
           }
           return response.json();
         })
