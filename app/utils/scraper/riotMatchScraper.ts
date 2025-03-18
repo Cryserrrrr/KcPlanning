@@ -18,8 +18,6 @@ export const riotMatchScraper = async ({
   game: string;
   url: string;
 }) => {
-  console.log("🚀 Démarrage du scraper avec:", { game, url });
-
   const browser = await puppeteer.launch({
     args: [
       "--no-sandbox",
@@ -34,12 +32,6 @@ export const riotMatchScraper = async ({
 
   const page = await browser.newPage();
   let eventsData: any[] = [];
-
-  page.on("console", (msg) => {
-    if (!msg.text().includes("border-radius:2px;")) {
-      console.log("Page console:", msg.text());
-    }
-  });
 
   // Configurer un user-agent réaliste
   await page.setUserAgent(
@@ -111,24 +103,12 @@ export const riotMatchScraper = async ({
         },
       })
         .then((response) => {
-          console.log(`Response status: ${response.status}`);
-          if (!response.ok) {
-            return response.text().then((text) => {
-              console.error("Error response body:", text);
-              console.log("Response", response.url);
-            });
-          }
           return response.json();
         })
         .then((data) => {
           if (data?.data?.esports?.events) {
-            console.log(`Found ${data.data.esports.events.length} events`);
             return data.data.esports.events;
           }
-          console.log(
-            "No events found in response:",
-            JSON.stringify(data).substring(0, 200) + "..."
-          );
           return [];
         })
         .catch((error) => {
@@ -146,7 +126,6 @@ export const riotMatchScraper = async ({
     console.error("❌ Erreur critique dans le scraper:", error);
     eventsData = [];
   } finally {
-    console.log("🔚 Fermeture du navigateur");
     await browser.close();
   }
 
