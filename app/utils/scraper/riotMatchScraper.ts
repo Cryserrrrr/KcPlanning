@@ -40,8 +40,6 @@ export const riotMatchScraper = async ({
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
   );
 
-  await new Promise((resolve) => setTimeout(resolve, 5000));
-
   const dataPromise = new Promise<any[]>((resolve) => {
     // Add request interception for debugging
     page.on("request", (request) => {
@@ -69,21 +67,12 @@ export const riotMatchScraper = async ({
         }
       }
     });
-
-    page.waitForResponse((response) => {
-      const responseUrl = response.url();
-      return (
-        responseUrl.includes("api/gql") &&
-        responseUrl.includes("operationName=homeEvents") &&
-        responseUrl.includes("leagues")
-      );
-    });
   });
 
   await page.goto(url, { waitUntil: "networkidle2" });
 
-  const timeoutPromise = new Promise<any[]>((resolve) =>
-    setTimeout(() => resolve([]), 10000)
+  const timeoutPromise = new Promise<any[]>(
+    (resolve) => setTimeout(() => resolve([]), 60000) // Changed from 10000 to 30000 (30 seconds)
   );
   eventsData = await Promise.race([dataPromise, timeoutPromise]);
 
