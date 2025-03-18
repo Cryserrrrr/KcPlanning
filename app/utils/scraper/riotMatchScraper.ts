@@ -35,7 +35,11 @@ export const riotMatchScraper = async ({
   const page = await browser.newPage();
   let eventsData: any[] = [];
 
-  page.on("console", (msg) => console.log("Page console:", msg.text()));
+  page.on("console", (msg) => {
+    if (!msg.text().includes("border-radius:2px;")) {
+      console.log("Page console:", msg.text());
+    }
+  });
 
   // Configurer un user-agent réaliste
   await page.setUserAgent(
@@ -119,10 +123,8 @@ export const riotMatchScraper = async ({
           console.log(`Response status: ${response.status}`);
           if (!response.ok) {
             return response.text().then((text) => {
-              if (!text.includes("border-radius:2px;")) {
-                console.error("Error response body:", text);
-                console.log("Response", response.url);
-              }
+              console.error("Error response body:", text);
+              console.log("Response", response.url);
             });
           }
           return response.json();
