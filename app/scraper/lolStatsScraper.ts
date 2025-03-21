@@ -111,10 +111,8 @@ export async function scrapeLolStats(
     );
   } else {
     rankingDataAndCurrentSplit = {
-      rankingData:
-        rankingDataCache[currentSplit?.toString() || league].rankingData,
-      currentSplit:
-        rankingDataCache[currentSplit?.toString() || league].currentSplit,
+      rankingData: rankingDataCache[currentSplit?.toString() || league],
+      currentSplit: currentSplit,
     };
   }
   promises.push(
@@ -151,7 +149,6 @@ export async function scrapeLolStats(
  */
 export async function handleCookieConsent(browser: Browser): Promise<void> {
   try {
-    console.log("🔄 Handling cookie consent");
     const page = await browser.newPage();
     await page.goto(Links.lolFandom, { waitUntil: "networkidle2" });
     const cookieButton = await page.$("#onetrust-reject-all-handler");
