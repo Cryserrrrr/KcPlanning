@@ -85,7 +85,7 @@ export const riotEsportRequestScraper = async ({
         interface ApiVariables {
           hl: string;
           sport: string;
-          leagueIds: string[];
+          leagues: string[];
           eventDateStart: string;
           eventDateEnd: string;
           eventState: string[];
@@ -96,7 +96,7 @@ export const riotEsportRequestScraper = async ({
         const variables: ApiVariables = {
           hl: "fr-FR",
           sport: gameSport === "League of Legends" ? "lol" : "val",
-          leagueIds:
+          leagues:
             gameSport === "League of Legends" ? lolLeagues : valorantLeagues,
           eventDateStart: startDateStr,
           eventDateEnd: endDateStr,

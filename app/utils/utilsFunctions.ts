@@ -10,6 +10,8 @@ export function correctLolName(name: string) {
       return name.toUpperCase();
     case "Ici Japon Corp":
       return "Ici Japon Corp. Esport";
+    case "Rogue":
+      return "Rogue (European Team)";
     default:
       return name;
   }
