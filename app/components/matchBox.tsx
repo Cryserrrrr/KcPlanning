@@ -63,9 +63,9 @@ const MatchBox = ({
       </div>
       <div className="flex flex-row justify-between items-center gap-4">
         <div
-          className={`text-sm border border-gray rounded-md p-2 px-4 bg-black/50 flex items-center justify-center ${
-            match.teams[0].score !== null ? "w-1/3" : "w-1/2"
-          } relative ${isMobile ? "p-4" : ""}`}
+          className={`text-sm border border-gray rounded-md p-2 px-4 bg-black/50 flex items-center justify-center w-1/3 relative ${
+            isMobile ? "p-4" : ""
+          }`}
         >
           <div
             className={`absolute bottom-0 left-0 text-[10px] text-white p-1 text-center f ${
@@ -80,55 +80,57 @@ const MatchBox = ({
             className={isMobile ? "w-[70%] h-[70%] object-contain" : ""}
           />
         </div>
-        {match.teams[0].score !== null ? (
-          <div
-            className="flex flex-col justify-center items-center text-center"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsScoreVisible(true);
-            }}
-          >
-            {isScoreVisible ? (
-              <div
-                className={`flex flex-row justify-center items-center ${
-                  isMobile
-                    ? "w-[200px] h-[200px] text-5xl"
-                    : "w-[50px] h-[50px]"
-                } z-10`}
-              >
-                <div className="text-white text-center">
-                  {match.teams[0].score} - {match.teams[1].score}
+        <div className="w-1/3 flex justify-center items-center">
+          {match.teams[0].score !== null ? (
+            <div
+              className="flex flex-col justify-center items-center text-center"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsScoreVisible(true);
+              }}
+            >
+              {isScoreVisible ? (
+                <div
+                  className={`flex flex-row justify-center items-center ${
+                    isMobile
+                      ? "w-[200px] h-[200px] text-5xl"
+                      : "w-[50px] h-[50px]"
+                  } z-10`}
+                >
+                  <div className="text-white text-center">
+                    {match.teams[0].score} - {match.teams[1].score}
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div
-                className={`flex flex-row justify-center items-center bg-secondary rounded-md ${
-                  isMobile ? "w-[200px] h-[200px]" : "w-[50px] h-[50px]"
-                } z-10`}
-              >
-                <img
-                  src={eyeIcon}
-                  alt="eye"
-                  className={isMobile ? "w-12 h-12" : ""}
-                />
-              </div>
-            )}
-          </div>
-        ) : (
-          <div
-            className={`flex flex-col justify-center items-center text-center ${
-              isMobile
-                ? "w-[200px] h-[200px] text-5xl"
-                : "w-[50px] h-[50px] text-sm"
-            } z-10`}
-          >
-            <div className="text-white text-center">Bo{match.rounds}</div>
-          </div>
-        )}
+              ) : (
+                <div
+                  className={`flex flex-row justify-center items-center bg-secondary rounded-md ${
+                    isMobile ? "w-[200px] h-[200px]" : "w-[50px] h-[50px]"
+                  } z-10`}
+                >
+                  <img
+                    src={eyeIcon}
+                    alt="eye"
+                    className={isMobile ? "w-12 h-12" : ""}
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            <div
+              className={`flex flex-col justify-center items-center text-center ${
+                isMobile
+                  ? "w-[200px] h-[200px] text-5xl"
+                  : "w-[50px] h-[50px] text-sm"
+              } z-10`}
+            >
+              <div className="text-white text-center">Bo{match.rounds}</div>
+            </div>
+          )}
+        </div>
         <div
-          className={`text-sm border border-gray rounded-md p-2 px-4 bg-black/50 flex items-center justify-center ${
-            match.teams[1].score !== null ? "w-1/3" : "w-1/2"
-          } relative ${isMobile ? "p-4" : ""}`}
+          className={`text-sm border border-gray rounded-md p-2 px-4 bg-black/50 flex items-center justify-center w-1/3 relative ${
+            isMobile ? "p-4" : ""
+          }`}
         >
           <div
             className={`absolute bottom-0 left-0 text-[10px] text-white p-1 text-center ${

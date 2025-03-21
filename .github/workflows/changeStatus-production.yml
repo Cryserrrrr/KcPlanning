@@ -1,0 +1,17 @@
+name: "🚀 Production - Change status"
+
+on:
+  schedule:
+    - cron: "1 * * * *"
+  workflow_dispatch:
+
+jobs:
+  cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔑 Securised call to Remix API
+        run: |
+          curl -X POST \
+          --fail \
+          -H "Authorization: Bearer ${{ secrets.SCRAPER_SECRET }}" \
+          https://kcagenda.com/api/tasks/change-status

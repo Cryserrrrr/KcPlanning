@@ -1,5 +1,6 @@
-import { Match } from "../models/match";
-import { scrapeLolStats } from "./scraper/lolStatScraper";
+import { correctLolName } from "~/utils/utilsFunctions";
+import { Match } from "../../models/match";
+import { scrapeLolStats } from "../lolStatsScraper";
 
 /**
  * Updates team statistics with scraped data
@@ -51,8 +52,8 @@ export async function updateLolStats(): Promise<void> {
     for (const match of upcomingMatches) {
       try {
         // Extract team names
-        const teamOneName = match.teams[0].name;
-        const teamTwoName = match.teams[1].name;
+        const teamOneName = correctLolName(match.teams[0].name);
+        const teamTwoName = correctLolName(match.teams[1].name);
 
         // Scrape stats for the match
         const scrapedStats = await scrapeLolStats(

@@ -1,67 +1,13 @@
 import puppeteer, { Browser, Page, ElementHandle } from "puppeteer";
-
-// Define interfaces for the data structures
-interface SideWin {
-  winOrLoss: string;
-  side: string;
-}
-
-interface SidePercentages {
-  winByRedSidePercentage: number;
-  winByBlueSidePercentage: number;
-}
-
-export interface KcStats extends SidePercentages {
-  winrateVsOtherTeamPercentage?: number;
-  topThreeChampions?: [string, number][];
-}
-
-interface WinrateData {
-  date: string;
-  winOrLoss: number;
-}
-
-interface MatchResult {
-  date: string;
-  winOrLoss: number;
-}
-
-interface TeamStats {
-  playerTableData?: {
-    name: string;
-    kda: string;
-    csm: string;
-    gm: string;
-    dmgm: string;
-    kpar: string;
-    mostPlayedChampion: string[];
-  }[];
-  championTableData?: {
-    champion: string;
-    gamesPlayed: string;
-    winRate: string;
-    kda: string;
-    csm: string;
-    gm: string;
-    dmgm: string;
-    kpar: string;
-  }[];
-  numberOfChampionsPlayed: number;
-}
-
-export interface RankingData {
-  position: string;
-  teamName: string;
-  regionName: string;
-  series: { win: string; lose: string; percentage: string };
-}
-
-export interface ScrapingResult {
-  kcStats: KcStats;
-  firstTeamStats: TeamStats | undefined;
-  secondTeamStats: TeamStats | undefined;
-  rankingData: RankingData[] | null;
-}
+import {
+  ScrapingResult,
+  KcStats,
+  SideWin,
+  SidePercentages,
+  WinrateData,
+  MatchResult,
+  TeamStats,
+} from "~/types/match";
 
 export async function scrapeLolStats(
   teamOneName: string,
@@ -367,7 +313,7 @@ export const getTeamsStats = async (
               ) || [],
           };
         })
-        .filter((item) => item.name.length > 0);
+        .filter((item) => item.kda.length > 0);
     });
 
     // Find the second table that is in a div containing h3 with span id="By_Champion"

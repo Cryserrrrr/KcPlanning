@@ -1,18 +1,28 @@
 import { connectDB } from "~/db";
-import { scrapeValorantTeams } from "./valorantTeamScraper";
+import { scrapeValorantTeams } from "../valorantTeamScraper";
 import { Match } from "~/models/match";
-import { MatchType, PlayerType } from "./lolscraper";
-import { riotMatchScraper } from "./riotMatchScraper";
+import { MatchType, PlayerType } from "~/types/match";
+import { riotMatchScraper } from "./riotMatch";
+import { Links } from "~/utils/links";
 
-const VAL_URL: string =
-  "https://valorantesports.com/fr-FR/leagues/challengers_emea,game_changers_championship,game_changers_emea,vct_emea,vct_masters,vrl_france";
-
+/**
+ * Scrapes Valorant matches from the specified URL.
+ *
+ * This function:
+ * 1. Connects to the database
+ * 2. Fetches match data using the Riot API scraper
+ * 3. Adds player rosters to each team in the matches
+ * 4. Retrieves and adds statistics for teams and players
+ * 5. Stores complete match data in the database
+ *
+ * @returns {Promise<void>} A promise that resolves when scraping is complete
+ */
 export async function scrapeValorantMatches(): Promise<void> {
   await connectDB();
 
   const matchesToAdd: (MatchType | null)[] = await riotMatchScraper({
     game: "Valorant",
-    url: VAL_URL,
+    url: Links.valorantEsports,
   });
 
   if (matchesToAdd.length === 0) {

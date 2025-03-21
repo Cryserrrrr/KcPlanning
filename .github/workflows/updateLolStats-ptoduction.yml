@@ -1,0 +1,17 @@
+name: "🚀 Production - Update Lol Stats"
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔑 Securised call to Remix API
+        run: |
+          curl -X POST \
+          --fail \
+          -H "Authorization: Bearer ${{ secrets.SCRAPER_SECRET }}" \
+          https://kcagenda.com/api/tasks/update-lol-stats

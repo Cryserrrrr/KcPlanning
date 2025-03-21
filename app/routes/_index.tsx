@@ -2,14 +2,7 @@ import type { MetaFunction, LoaderFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { Match, MatchType } from "~/models/match";
-import {
-  format,
-  startOfWeek,
-  addDays,
-  parseISO,
-  isBefore,
-  isSameDay,
-} from "date-fns";
+import { format, startOfWeek, addDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import kcLogo from "/icons/kc-logo.svg";
 import arrow from "/icons/arrow.svg";
@@ -25,8 +18,11 @@ export const meta: MetaFunction = () => {
   return [
     { title: "Karmine Corp Schedule" },
     { name: "description", content: "Karmine Corp Schedule" },
+    { name: "build-date", content: BUILD_DATE },
   ];
 };
+
+export const BUILD_DATE = new Date().toISOString();
 
 type LoaderData = {
   matches: MatchTypeWithId[];
@@ -518,15 +514,16 @@ export default function Index() {
       <div className="flex flex-row items-center mt-auto pt-4 border-t border-gray-700">
         <div className="w-1/4">
           <p className="text-gray-400 flex flex-row items-center space-x-2 gap-1">
-            Made with <img src={heart} alt="heart" className="w-4 h-4" />
-            by Cryser
+            Made with 💙 by Cryser
           </p>
         </div>
         <div className="w-2/4 flex justify-center">
           <p className="text-gray-400 font-bold">Unofficial Project</p>
         </div>
         <div className="w-1/4 flex justify-end">
-          <p className="text-gray-400">In development</p>
+          <p className="text-gray-400">
+            In development • {format(new Date(BUILD_DATE), "dd/MM/yyyy")}
+          </p>
         </div>
       </div>
 

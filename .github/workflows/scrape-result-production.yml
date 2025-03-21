@@ -1,8 +1,8 @@
-name: "🚀 Production - Scraping Cron"
+name: "🚀 Production - Scraping result"
 
 on:
   schedule:
-    - cron: "0 12,23 * * *"
+    - cron: "0 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -14,4 +14,4 @@ jobs:
           curl -X POST \
           --fail \
           -H "Authorization: Bearer ${{ secrets.SCRAPER_SECRET }}" \
-          https://kcagenda.com/api/tasks/scrape-matches
+          https://kcagenda.com/api/tasks/check-result

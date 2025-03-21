@@ -12,10 +12,8 @@ import { RemixServer } from "@remix-run/react";
 import { isbot } from "isbot";
 import { renderToPipeableStream } from "react-dom/server";
 import { connectDB } from "./db";
-import { startScheduler } from "./utils/scheduler";
 import { initializeCasters } from "./db/init-casters";
 
-startScheduler();
 initializeCasters();
 connectDB().catch(console.error);
 

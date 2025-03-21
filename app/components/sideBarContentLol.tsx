@@ -320,7 +320,13 @@ export default function SidebarContentLol({
                 isMobile ? "text-3xl" : ""
               }`}
             >
-              {caster.twitchLink}
+              <a
+                href={caster.twitchLink}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {caster.twitchLink}
+              </a>
             </p>
           </div>
         ))}
@@ -335,7 +341,13 @@ export default function SidebarContentLol({
                 isMobile ? "text-3xl" : ""
               }`}
             >
-              https://www.youtube.com/@KarmineCorpVOD/videos
+              <a
+                href={`https://www.youtube.com/@KarmineCorpVOD/videos`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                https://www.youtube.com/@KarmineCorpVOD/videos
+              </a>
             </p>
           </div>
         )}

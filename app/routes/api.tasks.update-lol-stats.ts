@@ -1,7 +1,6 @@
 import type { ActionFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { scrapeLeagueOfLegendsMatches } from "~/scraper/scraperStarter/lolEsportMatches";
-import { scrapeValorantMatches } from "~/scraper/scraperStarter/valorantEsportMatches";
+import { updateLolStats } from "~/scraper/scraperStarter/updateLolStats";
 
 export const action: ActionFunction = async ({ request }) => {
   const authHeader = request.headers.get("Authorization");
@@ -12,11 +11,8 @@ export const action: ActionFunction = async ({ request }) => {
     return json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
   try {
-    console.log("🔄 Scraping matches...");
-    await Promise.all([
-      scrapeLeagueOfLegendsMatches(),
-      scrapeValorantMatches(),
-    ]);
+    console.log("🔄 Updating lol stats...");
+    await updateLolStats();
     return json({ success: true }, { status: 200 });
   } catch (error) {
     return json(

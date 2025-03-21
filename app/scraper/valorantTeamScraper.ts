@@ -1,5 +1,5 @@
 import puppeteer from "puppeteer";
-import { PlayerType } from "./lolscraper";
+import { PlayerType } from "~/types/match";
 
 export async function scrapeValorantTeams(
   teamName: string

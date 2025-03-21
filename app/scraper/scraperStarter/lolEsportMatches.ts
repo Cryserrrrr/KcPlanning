@@ -1,52 +1,29 @@
-import puppeteer from "puppeteer";
 import { connectDB } from "~/db";
-import { scrapeLolTeams } from "./lolTeamScraper";
-import { Caster as CasterType } from "~/models/caster";
-import { Types } from "mongoose";
+import { scrapeLolTeams } from "../lolTeamScraper";
 import { Match } from "~/models/match";
-import { KcStats, RankingData, scrapeLolStats } from "./lolStatScraper";
-import { ScrapingResult } from "./lolStatScraper";
-import { riotMatchScraper } from "./riotMatchScraper";
+import { scrapeLolStats } from "../lolStatsScraper";
+import { ScrapingResult, MatchType, PlayerType } from "~/types/match";
+import { riotMatchScraper } from "./riotMatch";
+import { Links } from "~/utils/links";
 
-type teamsType = {
-  acronym: string;
-  name: string;
-  logoUrl: string;
-  players: { position: string | null; name: string; stats?: any | null }[];
-  stats?: any | null;
-  numberOfChampionsPlayed?: number | null;
-  score?: number | null;
-};
-
-export type MatchType = {
-  matchId: Types.ObjectId | null;
-  date: Date;
-  teams: teamsType[];
-  league: string;
-  type: string;
-  game: string;
-  status: number;
-  rounds: number;
-  casters?: CasterType[] | null;
-  rankingData?: RankingData[] | null;
-  kcStats?: KcStats | null;
-};
-
-export type PlayerType = {
-  position: string | null;
-  name: string;
-  stats?: any | null;
-};
-
-const LEC_URL: string =
-  "https://lolesports.com/fr-FR/leagues/emea_masters,first_stand,lec,lfl,msi,worlds";
-
+/**
+ * Scrapes League of Legends matches from the specified URL.
+ *
+ * This function:
+ * 1. Connects to the database
+ * 2. Fetches match data using the Riot API scraper
+ * 3. Adds player rosters to each team in the matches
+ * 4. Retrieves and adds statistics for teams and players
+ * 5. Stores complete match data in the database
+ *
+ * @returns {Promise<void>} A promise that resolves when scraping is complete
+ */
 export async function scrapeLeagueOfLegendsMatches(): Promise<void> {
   await connectDB();
 
   const matchesToAdd: (MatchType | null)[] = await riotMatchScraper({
     game: "League of Legends",
-    url: LEC_URL,
+    url: Links.lolEsports,
   });
 
   if (matchesToAdd.length === 0) {
@@ -62,15 +39,17 @@ export async function scrapeLeagueOfLegendsMatches(): Promise<void> {
     }
     for (const team of match.teams) {
       if (rosterAlreadyAdded[team.name]) {
-        team.players = rosterAlreadyAdded[team.name].map((player) => ({
-          ...player,
-          stats: null,
-        }));
+        team.players = rosterAlreadyAdded[team.name].map(
+          (player: PlayerType) => ({
+            ...player,
+            stats: null,
+          })
+        );
       } else if (team.name === "TBD") {
         team.players = [];
       } else {
         const roster: PlayerType[] = await scrapeLolTeams(team.name);
-        team.players = roster.map((player) => ({
+        team.players = roster.map((player: PlayerType) => ({
           ...player,
           stats: null,
         }));
@@ -95,14 +74,14 @@ export async function scrapeLeagueOfLegendsMatches(): Promise<void> {
     match.teams[1].numberOfChampionsPlayed =
       statsData.secondTeamStats?.numberOfChampionsPlayed;
 
-    match.teams[0].players.forEach((player) => {
+    match.teams[0].players.forEach((player: PlayerType) => {
       // find player by name and add his stats
       const playerStats = statsData.firstTeamStats?.playerTableData?.find(
         (p) => p.name === player.name
       );
       player.stats = playerStats;
     });
-    match.teams[1].players.forEach((player) => {
+    match.teams[1].players.forEach((player: PlayerType) => {
       const playerStats = statsData.secondTeamStats?.playerTableData?.find(
         (p) => p.name === player.name
       );

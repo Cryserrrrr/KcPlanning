@@ -7,12 +7,7 @@ export async function scrapeLolTeams(teamName: string) {
 
   const page = await browser.newPage();
 
-  let formattedTeamName = teamName;
-  if (teamName === "Ici Japon Corp") {
-    formattedTeamName = "Ici_Japon_Corp._Esport";
-  } else {
-    formattedTeamName = teamName.replace(/\s+/g, "_");
-  }
+  let formattedTeamName = teamName.replace(/\s+/g, "_");
 
   const url = `https://lol.fandom.com/wiki/${formattedTeamName}`;
 
