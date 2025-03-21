@@ -33,6 +33,8 @@ export async function scrapeLeagueOfLegendsMatches(): Promise<void> {
 
   // Add roster to matches
   let rosterAlreadyAdded: { [key: string]: PlayerType[] } = {};
+  let teamStatsCache: { [key: string]: any } = {};
+  let rankingDataCache: { [key: string]: any } = {};
   for (const match of matchesToAdd) {
     if (!match) {
       continue;
@@ -61,10 +63,30 @@ export async function scrapeLeagueOfLegendsMatches(): Promise<void> {
       match.teams[0].name,
       match.teams[1].name,
       match.league,
-      match.type
+      match.type,
+      match.date,
+      teamStatsCache,
+      rankingDataCache
     );
 
-    match.rankingData = statsData.rankingData;
+    if (!teamStatsCache[match.teams[0].name]) {
+      teamStatsCache[match.teams[0].name] = statsData.firstTeamStats;
+    }
+    if (!teamStatsCache[match.teams[1].name]) {
+      teamStatsCache[match.teams[1].name] = statsData.secondTeamStats;
+    }
+
+    if (
+      !rankingDataCache[
+        statsData.rankingDataAndCurrentSplit.currentSplit || match.league
+      ]
+    ) {
+      rankingDataCache[
+        statsData.rankingDataAndCurrentSplit.currentSplit || match.league
+      ] = statsData.rankingDataAndCurrentSplit.rankingData;
+    }
+
+    match.rankingData = statsData.rankingDataAndCurrentSplit.rankingData;
     match.kcStats = statsData.kcStats;
 
     match.teams[0].stats = statsData.firstTeamStats?.championTableData;

@@ -7,19 +7,35 @@ import {
   WinrateData,
   MatchResult,
   TeamStats,
+  RankingData,
 } from "~/types/match";
+import { Links } from "~/utils/links";
 
+/**
+ * Scrapes League of Legends statistics for a match between two teams
+ * @param teamOneName - Name of the first team
+ * @param teamTwoName - Name of the second team
+ * @param league - Name of the league
+ * @param type - Type of match (e.g., "Play-offs", "Finale", "Système suisse")
+ * @param matchDate - Date of the match
+ * @param teamStatsCache - Cache of team statistics
+ * @param rankingDataCache - Cache of ranking data
+ * @returns Promise with the scraped data result
+ */
 export async function scrapeLolStats(
   teamOneName: string,
   teamTwoName: string,
   league: string,
-  type: string
+  type: string,
+  matchDate: Date,
+  teamStatsCache: { [key: string]: any },
+  rankingDataCache: { [key: string]: any }
 ): Promise<ScrapingResult> {
   const browser = await puppeteer.launch({
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
-  console.log("🔄 Scraping LOL stats...", teamOneName, teamTwoName);
+  console.log("🔄 Scraping LOL stats...", teamOneName, "vs", teamTwoName);
 
   const formattedTeamOneNameWithUnderscore = teamOneName.replace(/\s+/g, "_");
   const formattedTeamTwoNameWithUnderscore = teamTwoName.replace(/\s+/g, "_");
@@ -41,25 +57,86 @@ export async function scrapeLolStats(
 
   const firstUrl = `https://lol.fandom.com/Special:RunQuery/MatchHistoryGame?MHG%5Bpreload%5D=Team&MHG%5Bspl%5D=yes&MHG%5Bstartdate%5D=${currentYear}-01-01&MHG%5Bteam%5D=${formattedKarmineCorp}&_run=true`;
 
-  // Don't add it to the Promise.all cause getKcStats cookies handler is not working (idk why)
-  const firstTeamStats = await getTeamsStats(
-    formattedTeamOneNameWithUnderscore,
-    currentYear,
-    browser
+  let firstTeamStats: TeamStats | undefined;
+  let secondTeamStats: TeamStats | undefined;
+  let rankingDataAndCurrentSplit: {
+    rankingData: RankingData[] | null;
+    currentSplit: string | null;
+  } = { rankingData: null, currentSplit: null };
+  let kcStats: KcStats | null = null;
+
+  const currentSplit = await getCurrentSplit(league, matchDate);
+
+  const promises = [];
+
+  if (!teamStatsCache[teamOneName]) {
+    promises.push(
+      getTeamsStats(
+        formattedTeamOneNameWithUnderscore,
+        currentYear,
+        browser
+      ).then((stats) => {
+        firstTeamStats = stats;
+      })
+    );
+  } else {
+    firstTeamStats = teamStatsCache[teamOneName];
+  }
+
+  if (!teamStatsCache[teamTwoName]) {
+    promises.push(
+      getTeamsStats(
+        formattedTeamTwoNameWithUnderscore,
+        currentYear,
+        browser
+      ).then((stats) => {
+        secondTeamStats = stats;
+      })
+    );
+  } else {
+    secondTeamStats = teamStatsCache[teamTwoName];
+  }
+
+  if (!rankingDataCache[currentSplit?.toString() || league]) {
+    promises.push(
+      getRanking(
+        formattedLeagueNameWithUnderscore,
+        type,
+        browser,
+        currentYear,
+        matchDate
+      ).then((data) => {
+        rankingDataAndCurrentSplit = data;
+      })
+    );
+  } else {
+    rankingDataAndCurrentSplit = {
+      rankingData:
+        rankingDataCache[currentSplit?.toString() || league].rankingData,
+      currentSplit:
+        rankingDataCache[currentSplit?.toString() || league].currentSplit,
+    };
+  }
+  promises.push(
+    getKcStats(firstUrl, getOtherTeam, browser).then((kcStatsTemp) => {
+      kcStats = kcStatsTemp;
+    })
   );
-  const secondTeamStats = await getTeamsStats(
-    formattedTeamTwoNameWithUnderscore,
-    currentYear,
-    browser
-  );
+
   try {
-    const [kcStats, rankingData] = await Promise.all([
-      getKcStats(firstUrl, getOtherTeam, browser),
-      getRanking(formattedLeagueNameWithUnderscore, type, browser, currentYear),
-    ]);
+    if (!Object.keys(teamStatsCache).length) {
+      await handleCookieConsent(browser);
+    }
+    await Promise.all(promises);
+
     await browser.close();
 
-    return { kcStats, firstTeamStats, secondTeamStats, rankingData };
+    return {
+      kcStats,
+      firstTeamStats,
+      secondTeamStats,
+      rankingDataAndCurrentSplit,
+    };
   } catch (error) {
     console.error("❌ Error while scraping:", error);
     await browser.close();
@@ -67,6 +144,36 @@ export async function scrapeLolStats(
   }
 }
 
+/**
+ * Handles cookie consent banner on any page
+ * @param browser - Puppeteer browser instance
+ * @returns Promise resolving when cookie banner is dismissed or not found
+ */
+export async function handleCookieConsent(browser: Browser): Promise<void> {
+  try {
+    console.log("🔄 Handling cookie consent");
+    const page = await browser.newPage();
+    await page.goto(Links.lolFandom, { waitUntil: "networkidle2" });
+    const cookieButton = await page.$("#onetrust-reject-all-handler");
+    if (cookieButton) {
+      await cookieButton.click();
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const cookies = await page.cookies();
+      await browser.setCookie(...cookies);
+    }
+    await page.close();
+  } catch (error) {
+    console.log("Cookie banner not found or could not be dismissed");
+  }
+}
+
+/**
+ * Gets Karmine Corp statistics from the LoL Fandom website
+ * @param firstUrl - URL to fetch data from
+ * @param otherTeam - Name of the opponent team
+ * @param browser - Puppeteer browser instance
+ * @returns Promise with the KC stats data
+ */
 export const getKcStats = async (
   firstUrl: string,
   otherTeam: string,
@@ -76,7 +183,6 @@ export const getKcStats = async (
   await page.goto(firstUrl, { waitUntil: "networkidle2" });
 
   try {
-    await handleCookieBanner(page);
     const table = await getTableElement(page);
     const rows = await extractTableData(table);
 
@@ -108,13 +214,12 @@ export const getKcStats = async (
   }
 };
 
-// Helper functions for getKcStats
-async function handleCookieBanner(page: Page): Promise<void> {
-  try {
-    await page.click("#onetrust-reject-all-handler");
-  } catch (error) {}
-}
-
+/**
+ * Gets the table element from the page
+ * @param page - Puppeteer page instance
+ * @returns Promise with the table element handle
+ * @throws Error if table not found
+ */
 async function getTableElement(page: Page): Promise<ElementHandle<Element>> {
   const table = await page.waitForSelector("table.wikitable");
   if (!table) {
@@ -123,6 +228,11 @@ async function getTableElement(page: Page): Promise<ElementHandle<Element>> {
   return table;
 }
 
+/**
+ * Extracts data from the table element
+ * @param table - Table element handle
+ * @returns Promise with extracted table data as a 2D array
+ */
 async function extractTableData(
   table: ElementHandle<Element>
 ): Promise<string[][]> {
@@ -148,6 +258,11 @@ async function extractTableData(
   });
 }
 
+/**
+ * Extracts side win data from table rows
+ * @param rows - Table rows data
+ * @returns Array of side win records
+ */
 function extractSideWinsData(rows: string[][]): SideWin[] {
   return rows?.map((row: any) => ({
     winOrLoss: row[3],
@@ -155,6 +270,11 @@ function extractSideWinsData(rows: string[][]): SideWin[] {
   }));
 }
 
+/**
+ * Calculates win percentages for red and blue sides
+ * @param sideWins - Array of side win records
+ * @returns Object with win percentages for red and blue sides
+ */
 function calculateSideWinPercentages(sideWins: SideWin[]): SidePercentages {
   let winByRedSidePercentage = 0;
   let winByBlueSidePercentage = 0;
@@ -178,6 +298,11 @@ function calculateSideWinPercentages(sideWins: SideWin[]): SidePercentages {
   return { winByRedSidePercentage, winByBlueSidePercentage };
 }
 
+/**
+ * Extracts the top banned champions against a team
+ * @param otherTeamCells - Table cells data for the opponent team
+ * @returns Array of top 3 banned champions with their counts
+ */
 function extractTopBannedChampions(
   otherTeamCells: string[][]
 ): [string, number][] {
@@ -207,6 +332,11 @@ function extractTopBannedChampions(
     .slice(0, 3) as [string, number][];
 }
 
+/**
+ * Calculates winrate percentage against a specific team
+ * @param otherTeamCells - Table cells data for the opponent team
+ * @returns Winrate percentage (0-1)
+ */
 function calculateWinrateVsTeam(otherTeamCells: string[][]): number {
   const winrateVsOtherTeamData: WinrateData[] = otherTeamCells.map(
     (cell: string[]) => ({
@@ -237,6 +367,13 @@ function calculateWinrateVsTeam(otherTeamCells: string[][]): number {
     : 0;
 }
 
+/**
+ * Gets statistics for a team from the LoL Fandom website
+ * @param teamName - Name of the team
+ * @param currentYear - Current year
+ * @param browser - Puppeteer browser instance
+ * @returns Promise with team stats
+ */
 export const getTeamsStats = async (
   teamName: string,
   currentYear: number,
@@ -256,14 +393,6 @@ export const getTeamsStats = async (
       waitUntil: "networkidle2",
     }
   );
-
-  try {
-    const cookieButton = await page.$("#onetrust-reject-all-handler");
-    if (cookieButton) {
-      await cookieButton.click();
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
-  } catch (error) {}
 
   // Add a check if the page exists or has the expected content
   const pageNotFound = await page.$("div.noarticletext");
@@ -318,7 +447,6 @@ export const getTeamsStats = async (
 
     // Find the second table that is in a div containing h3 with span id="By_Champion"
     const championTableData = await page.evaluate(() => {
-      // Find the span with id="By_Champion"
       const targetSpan = document.querySelector("span#By_Champion");
       if (!targetSpan) return undefined;
 
@@ -398,27 +526,65 @@ export const getTeamsStats = async (
   }
 };
 
+/**
+ * Gets ranking data for a league
+ * @param league - Name of the league
+ * @param type - Type of match
+ * @param browser - Puppeteer browser instance
+ * @param currentYear - Current year
+ * @param matchDate - Date of the match
+ * @returns Promise with ranking data and current split
+ */
 const getRanking = async (
   league: string,
   type: string,
   browser: Browser,
-  currentYear: number
-) => {
+  currentYear: number,
+  matchDate: Date
+): Promise<{
+  rankingData: RankingData[] | null;
+  currentSplit: string | null;
+}> => {
   const page = await browser.newPage();
 
   const rankingFunction =
     rankingFunctions[league as keyof typeof rankingFunctions];
   if (!rankingFunction) {
-    return [];
+    return { rankingData: null, currentSplit: null };
   }
-  return await rankingFunction(type, page, currentYear, league);
+  const result = await rankingFunction(
+    type,
+    page,
+    currentYear,
+    league,
+    matchDate
+  );
+  return {
+    rankingData: Array.isArray(result) ? result : result?.rankingData || null,
+    currentSplit: !Array.isArray(result) ? result?.currentSplit || null : null,
+  };
 };
 
-const LFLRanking = async (type: string, page: Page, currentYear: number) => {
+/**
+ * Gets ranking data for LFL league
+ * @param type - Type of match
+ * @param page - Puppeteer page instance
+ * @param currentYear - Current year
+ * @param league - Name of the league
+ * @param matchDate - Date of the match
+ * @returns Promise with ranking data and current split
+ */
+const LFLRanking = async (
+  type: string,
+  page: Page,
+  currentYear: number,
+  league: string,
+  matchDate: Date
+) => {
   if (type === "Play-offs" || type === "Finale") {
     return [];
   }
-  const currentSplit = await getCurrentSplit("LFL");
+  const currentSplit = await getCurrentSplit(league, matchDate);
   await page.goto(`https://lol.fandom.com/wiki/LFL/${currentYear}_Season`);
 
   const rankingData = await page.evaluate(
@@ -493,14 +659,29 @@ const LFLRanking = async (type: string, page: Page, currentYear: number) => {
     type
   );
 
-  return rankingData || [];
+  return { rankingData, currentSplit };
 };
 
-const LECRanking = async (type: string, page: Page, currentYear: number) => {
+/**
+ * Gets ranking data for LEC league
+ * @param type - Type of match
+ * @param page - Puppeteer page instance
+ * @param currentYear - Current year
+ * @param league - Name of the league
+ * @param matchDate - Date of the match
+ * @returns Promise with ranking data and current split
+ */
+const LECRanking = async (
+  type: string,
+  page: Page,
+  currentYear: number,
+  league: string,
+  matchDate: Date
+) => {
   if (type === "Play-offs" || type === "Finale") {
     return [];
   }
-  const currentSplit = await getCurrentSplit("LEC");
+  const currentSplit = await getCurrentSplit(league, matchDate);
   await page.goto(`https://lol.fandom.com/wiki/LEC/${currentYear}_Season`);
 
   // Select the div after the h2 with span id = currentsplit
@@ -538,14 +719,24 @@ const LECRanking = async (type: string, page: Page, currentYear: number) => {
     });
   }, currentSplit);
 
-  return rankingData;
+  return { rankingData, currentSplit };
 };
 
+/**
+ * Gets ranking data for international events
+ * @param type - Type of match
+ * @param page - Puppeteer page instance
+ * @param currentYear - Current year
+ * @param league - Name of the league
+ * @param matchDate - Date of the match
+ * @returns Promise with ranking data and current split
+ */
 const InternationalEventRanking = async (
   type: string,
   page: Page,
   currentYear: number,
-  league: string
+  league: string,
+  matchDate: Date
 ) => {
   if (
     type === "Quarts de finale" ||
@@ -618,26 +809,61 @@ const InternationalEventRanking = async (
     });
   }, type);
 
-  return rankingData;
+  return { rankingData, currentSplit: null };
 };
 
-const getCurrentSplit = async (league: string) => {
-  const currentMonth = new Date().getMonth();
+/**
+ * Determines the current split based on the date and league
+ * @param league - Name of the league
+ * @param matchDate - Date of the match
+ * @returns Promise with the name of the current split
+ */
+const getCurrentSplit = async (
+  league: string,
+  matchDate: Date
+): Promise<string | null> => {
+  const currentMonth = matchDate.getMonth();
+  const currentDay = matchDate.getDate();
 
-  if (currentMonth >= 1 && currentMonth <= 2) {
-    if (league === "LEC") {
-      return "Winter";
-    } else if (league === "LFL") {
-      return "Flash_In";
-    }
-  } else if (currentMonth >= 3 && currentMonth <= 5) {
+  if (
+    currentMonth === 1 ||
+    (currentMonth === 2 && currentDay < 21) ||
+    (currentMonth === 12 && currentDay >= 21)
+  ) {
+    if (league === "LEC") return "Winter";
+    if (league === "LFL") return "Flash_In";
+  } else if (
+    currentMonth >= 3 ||
+    (currentMonth === 2 && currentDay >= 21 && currentMonth <= 5)
+  ) {
     return "Spring";
-  } else if (currentMonth >= 6 && currentMonth <= 8) {
+  } else if (
+    (currentMonth >= 6 || (currentMonth === 5 && currentDay >= 21)) &&
+    currentMonth <= 8
+  ) {
     return "Summer";
   }
+  return null;
 };
 
-const rankingFunctions = {
+/**
+ * Mapping of league names to their respective ranking functions
+ */
+const rankingFunctions: {
+  [key: string]: (
+    type: string,
+    page: Page,
+    currentYear: number,
+    league: string,
+    matchDate: Date
+  ) => Promise<
+    | {
+        rankingData: RankingData[] | null;
+        currentSplit: string | null;
+      }
+    | RankingData[]
+  >;
+} = {
   LFL: LFLRanking,
   LEC: LECRanking,
   First_Stand: InternationalEventRanking,

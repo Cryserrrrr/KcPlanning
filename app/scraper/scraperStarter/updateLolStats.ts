@@ -44,9 +44,8 @@ export async function updateLolStats(): Promise<void> {
       date: { $gte: new Date() },
     });
 
-    console.log(
-      `Found ${upcomingMatches.length} upcoming LOL matches to update`
-    );
+    let teamStatsCache: { [key: string]: any } = {};
+    let rankingDataCache: { [key: string]: any } = {};
 
     // Process each match
     for (const match of upcomingMatches) {
@@ -60,15 +59,36 @@ export async function updateLolStats(): Promise<void> {
           teamOneName,
           teamTwoName,
           match.league,
-          match.type
+          match.type,
+          match.date,
+          teamStatsCache,
+          rankingDataCache
         );
+
+        if (!teamStatsCache[match.teams[0].name]) {
+          teamStatsCache[match.teams[0].name] = scrapedStats.firstTeamStats;
+        }
+        if (!teamStatsCache[match.teams[1].name]) {
+          teamStatsCache[match.teams[1].name] = scrapedStats.secondTeamStats;
+        }
+
+        if (
+          !rankingDataCache[
+            scrapedStats.rankingDataAndCurrentSplit.currentSplit || match.league
+          ]
+        ) {
+          rankingDataCache[
+            scrapedStats.rankingDataAndCurrentSplit.currentSplit || match.league
+          ] = scrapedStats.rankingDataAndCurrentSplit.rankingData;
+        }
 
         // Update match with scraped stats
         if (scrapedStats.kcStats) {
           match.kcStats = scrapedStats.kcStats;
         }
-        if (scrapedStats.rankingData) {
-          match.rankingData = scrapedStats.rankingData;
+        if (scrapedStats.rankingDataAndCurrentSplit.rankingData) {
+          match.rankingData =
+            scrapedStats.rankingDataAndCurrentSplit.rankingData;
         }
 
         // Update team stats using the function
@@ -77,9 +97,6 @@ export async function updateLolStats(): Promise<void> {
 
         // Save updated match
         await match.save();
-        console.log(
-          `✅ Updated stats for match: ${teamOneName} vs ${teamTwoName}`
-        );
       } catch (error) {
         console.error(
           `❌ Error updating stats for match ${match.matchId}:`,
