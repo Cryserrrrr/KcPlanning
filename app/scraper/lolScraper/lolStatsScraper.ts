@@ -33,6 +33,7 @@ export async function scrapeLolStats(
 ): Promise<ScrapingResult> {
   const browser = await puppeteer.launch({
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    timeout: 60000,
   });
 
   console.log("🔄 Scraping LOL stats...", teamOneName, "vs", teamTwoName);
@@ -218,7 +219,9 @@ export const getKcStats = async (
  * @throws Error if table not found
  */
 async function getTableElement(page: Page): Promise<ElementHandle<Element>> {
-  const table = await page.waitForSelector("table.wikitable");
+  const table = await page.waitForSelector("table.wikitable", {
+    timeout: 30000,
+  });
   if (!table) {
     throw new Error("🟥 Table not found");
   }
@@ -403,10 +406,10 @@ export const getTeamsStats = async (
     };
   }
 
-  // Use a shorter timeout and handle the case when the table doesn't exist
+  // Use a longer timeout when waiting for selectors
   try {
     const playerTable = await page.waitForSelector("table.wikitable", {
-      timeout: 5000,
+      timeout: 30000,
     });
 
     if (!playerTable) {

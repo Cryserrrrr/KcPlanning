@@ -43,6 +43,7 @@ export const getDiv2Matches = async (): Promise<void> => {
       "--no-zygote",
       "--disable-gpu",
     ],
+    timeout: 120000,
   });
 
   try {
@@ -73,13 +74,20 @@ export const getDiv2Matches = async (): Promise<void> => {
       }
     });
 
+    page.setDefaultNavigationTimeout(120000);
+    page.setDefaultTimeout(120000);
+
     await page.goto(Links.div2Matches, {
       waitUntil: "networkidle2",
+      timeout: 120000,
     });
 
     let attempts = 0;
-    while (!roundsData.length && attempts < 10) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    const maxAttempts = 10;
+    const attemptDelay = 1000;
+
+    while (!roundsData.length && attempts < maxAttempts) {
+      await new Promise((resolve) => setTimeout(resolve, attemptDelay));
       attempts++;
     }
 
@@ -115,6 +123,8 @@ export const getDiv2Matches = async (): Promise<void> => {
     });
 
     const responses: Div2Match[][] = await Promise.all(fetchPromises);
+
+    await browser.close();
 
     responses.forEach((response) => {
       if (response && Array.isArray(response)) {
@@ -265,10 +275,14 @@ export const getDiv2Matches = async (): Promise<void> => {
     );
 
     await Match.insertMany(formattedMatches);
+
+    console.log("✅ Scraping completed:", formattedMatches.length, "matches");
   } catch (error) {
     console.error("Erreur lors du scraping:", error);
     throw error;
   } finally {
-    await browser.close();
+    if (browser && browser.isConnected()) {
+      await browser.close();
+    }
   }
 };
