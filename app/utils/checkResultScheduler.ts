@@ -23,7 +23,6 @@ export async function checkLiveMatchesAndScrapeResults() {
     });
 
     if (liveMatches.length) {
-      console.log("pass");
       await scrapeResults(liveMatches);
       await new Promise((resolve) => setTimeout(resolve, 30 * 1000));
       await checkLiveMatchesAndScrapeResults();

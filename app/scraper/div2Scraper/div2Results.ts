@@ -15,7 +15,13 @@ export const getDiv2Results = async (
   liveMatches: MatchType[]
 ): Promise<void> => {
   await connectDB();
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+    ],
+  });
   await handleCookieConsent(browser);
   const page = await browser.newPage();
 

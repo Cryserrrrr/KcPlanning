@@ -170,7 +170,7 @@ export const getDiv2Matches = async (): Promise<void> => {
     let teamStatsCache: { [key: string]: TeamStats } = {};
     let rankingDataCache: { [key: string]: RankingData[] } = {};
     const formattedMatches: MatchType[] = [];
-
+    // Don't use Promise.all because server is not able to handle it
     for (const match of newMatches) {
       let teams: TeamsType[] = match.opponents.map((opponent) => {
         const name: string = opponent.participant.name;
@@ -281,8 +281,6 @@ export const getDiv2Matches = async (): Promise<void> => {
     console.error("Erreur lors du scraping:", error);
     throw error;
   } finally {
-    if (browser && browser.isConnected()) {
-      await browser.close();
-    }
+    await browser.close();
   }
 };
