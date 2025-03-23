@@ -10,7 +10,7 @@ import { Status, RiotEvent } from "~/types/match";
  * @param liveMatches - Array of matches that need to be checked for completion
  * @returns Promise that resolves when match updates are complete
  */
-export async function getRiotResult(liveMatches: MatchType[]): Promise<void> {
+export async function getRiotResults(liveMatches: MatchType[]): Promise<void> {
   await connectDB();
 
   // Fetch completed events from both League of Legends and Valorant

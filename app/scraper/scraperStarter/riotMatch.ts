@@ -73,10 +73,7 @@ export const riotMatchScraper = async ({
       const league: string = event.league.name;
 
       const teams = event.match.matchTeams.map((team: any) => ({
-        name:
-          game === "League of Legends"
-            ? correctLolName(team.name)
-            : correctValorantName(team.name, league),
+        name: team.name,
         acronym: team.code,
         logoUrl: team.image,
         players: [],

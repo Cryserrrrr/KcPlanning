@@ -12,6 +12,12 @@ export function correctLolName(name: string) {
       return "Ici Japon Corp. Esport";
     case "Rogue":
       return "Rogue (European Team)";
+    case "KCorp Blue Stars":
+      return "Karmine Corp Blue Stars";
+    case "Esprit Shonen":
+      return "Esprit Shōnen";
+    case "Izidream":
+      return "Izi Dream";
     default:
       return name;
   }

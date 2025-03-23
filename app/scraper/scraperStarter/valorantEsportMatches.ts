@@ -1,9 +1,10 @@
 import { connectDB } from "~/db";
-import { scrapeValorantTeams } from "../valorantTeamScraper";
+import { scrapeValorantTeams } from "../valorantScraper/valorantTeamScraper";
 import { Match } from "~/models/match";
 import { MatchType, PlayerType } from "~/types/match";
 import { riotMatchScraper } from "./riotMatch";
 import { Links } from "~/utils/links";
+import { correctValorantName } from "~/utils/utilsFunctions";
 
 /**
  * Scrapes Valorant matches from the specified URL.
@@ -45,7 +46,9 @@ export async function scrapeValorantMatches(): Promise<void> {
       } else if (team.name === "TBD") {
         team.players = [];
       } else {
-        const roster: PlayerType[] = await scrapeValorantTeams(team.name);
+        const roster: PlayerType[] = await scrapeValorantTeams(
+          correctValorantName(team.name, match.league)
+        );
         team.players = roster.map((player) => ({ ...player, stats: null }));
         rosterAlreadyAdded[team.name] = roster;
       }

@@ -123,7 +123,9 @@ const MatchBox = ({
                   : "w-[50px] h-[50px] text-sm"
               } z-10`}
             >
-              <div className="text-white text-center">Bo{match.rounds}</div>
+              <div className="text-white text-center">
+                {match.rounds ? `Bo${match.rounds}` : "Vs"}
+              </div>
             </div>
           )}
         </div>

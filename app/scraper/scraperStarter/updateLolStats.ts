@@ -1,6 +1,6 @@
 import { correctLolName } from "~/utils/utilsFunctions";
 import { Match } from "../../models/match";
-import { scrapeLolStats } from "../lolStatsScraper";
+import { scrapeLolStats } from "../lolScraper/lolStatsScraper";
 
 /**
  * Updates team statistics with scraped data

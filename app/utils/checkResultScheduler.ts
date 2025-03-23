@@ -1,74 +1,38 @@
 import { connectDB } from "~/db";
 import { MatchType, Match } from "~/models/match";
-import { getRiotResult } from "../scraper/scraperStarter/getResult";
-let liveMatchesInterval: NodeJS.Timeout | null = null;
-let hasLiveMatches = false;
-let isCheckingLiveMatches = false;
-
-export function startLolResultScheduler() {
-  if (!isCheckingLiveMatches) {
-    checkLiveMatchesAndScrapeResults();
-  } else {
-    console.log("⏳ Previous live match check still running, skipping...");
-  }
-}
+import { getRiotResults } from "../scraper/scraperStarter/getResult";
+import { getDiv2Results } from "~/scraper/div2Scraper/div2Results";
 
 /**
  * Combines the functionality of checking for live matches and scraping results.
  * This function will:
  * 1. Check if there are any live matches
- * 2. Start or stop the scraping interval as needed
- * 3. Immediately scrape results if live matches are found
+ * 2. Immediately scrape results if live matches are found
+ * 3. Wait 10 minutes and check again
  * @returns void
  * @throws Error if there is an error checking for live matches or scraping results
  */
-async function checkLiveMatchesAndScrapeResults() {
+export async function checkLiveMatchesAndScrapeResults() {
   try {
-    isCheckingLiveMatches = true;
     await connectDB();
 
     // Find matches that are currently live
     const liveMatches = await Match.find({
       status: 1,
       game: { $in: ["League of Legends", "Valorant"] },
-    }).select("id, matchId");
+    });
 
-    // If we have live matches but the interval isn't running
-    if (liveMatches.length && !hasLiveMatches) {
-      console.log(
-        `🟢 Starting result scraper (${liveMatches.length} live matches found)`
-      );
-      hasLiveMatches = true;
-
-      if (liveMatchesInterval === null) {
-        await scrapeResults(liveMatches);
-        liveMatchesInterval = setInterval(
-          () => scrapeResults(liveMatches),
-          10 * 60 * 1000
-        );
-      }
-    }
-    // If we have no live matches but the interval is running
-    else if (liveMatches.length === 0 && hasLiveMatches) {
-      console.log("🔴 Stopping result scraper (no live matches)");
-      hasLiveMatches = false;
-
-      // Clear the interval
-      if (liveMatchesInterval !== null) {
-        clearInterval(liveMatchesInterval);
-        liveMatchesInterval = null;
-      }
-    }
-    // If there are live matches and the interval is already running,
-    // still scrape results immediately for fresh data
-    else if (liveMatches.length) {
+    if (liveMatches.length) {
+      console.log("pass");
       await scrapeResults(liveMatches);
+      await new Promise((resolve) => setTimeout(resolve, 30 * 1000));
+      await checkLiveMatchesAndScrapeResults();
+    } else {
+      console.log("🔴 No live matches found");
+      return;
     }
   } catch (error) {
     console.error("Error checking for live matches status:", error);
-  } finally {
-    console.log("🔴 No live matches found");
-    isCheckingLiveMatches = false;
   }
 }
 
@@ -76,9 +40,27 @@ async function checkLiveMatchesAndScrapeResults() {
  * Helper function to scrape match results
  */
 async function scrapeResults(liveMatches: MatchType[]) {
+  // create variable by game
+  const liveMatchesByGame = liveMatches.reduce<{ [key: string]: MatchType[] }>(
+    (acc, match) => {
+      const game = match.league === "div2" ? "div2" : match.game;
+      acc[game] = acc[game] || [];
+      acc[game].push(match);
+      return acc;
+    },
+    {}
+  );
+
   try {
-    console.log("🔄 Scraping match results...");
-    await getRiotResult(liveMatches);
+    for (const game in liveMatchesByGame) {
+      if (game === "League of Legends" || game === "Valorant") {
+        console.log("🔄 Scraping League of Legends and Valorant results...");
+        await getRiotResults(liveMatchesByGame[game]);
+      } else if (game === "div2") {
+        console.log("🔄 Scraping Div2 results...");
+        await getDiv2Results(liveMatchesByGame[game]);
+      }
+    }
   } catch (error) {
     console.error("Error scraping results:", error);
   }

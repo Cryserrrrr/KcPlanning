@@ -27,10 +27,12 @@ export default function Sidebar({ isOpen, onClose, match }: SidebarProps) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const karmineCorp = match?.teams.find((team) =>
-    team.name.includes("Karmine")
+  const karmineCorp = match?.teams.find(
+    (team) => team.name.includes("Karmine") || team.name.includes("KCorp")
   );
-  const opponent = match?.teams.find((team) => !team.name.includes("Karmine"));
+  const opponent = match?.teams.find(
+    (team) => !team.name.includes("Karmine") && !team.name.includes("KCorp")
+  );
 
   // Default to desktop width until client-side code runs
   const sidebarWidth =

@@ -3,7 +3,7 @@ import { Caster as CasterType } from "~/models/caster";
 
 // Global types
 
-type teamsType = {
+export type TeamsType = {
   acronym: string;
   name: string;
   logoUrl: string;
@@ -14,9 +14,9 @@ type teamsType = {
 };
 
 export type MatchType = {
-  matchId: Types.ObjectId | null;
+  matchId: string | null;
   date: Date;
-  teams: teamsType[];
+  teams: TeamsType[];
   league: string;
   type: string;
   game: string;
@@ -91,10 +91,13 @@ export interface RankingData {
 }
 
 export interface ScrapingResult {
-  kcStats: KcStats;
+  kcStats: KcStats | null;
   firstTeamStats: TeamStats | undefined;
   secondTeamStats: TeamStats | undefined;
-  rankingData: RankingData[] | null;
+  rankingDataAndCurrentSplit: {
+    rankingData: RankingData[] | null;
+    currentSplit: string | null;
+  };
 }
 
 // Enum
@@ -165,4 +168,137 @@ export interface RiotEvent {
     name: string;
   };
   type: string;
+}
+
+// Division 2 scraper
+
+export interface Round {
+  closed: boolean;
+  group: {
+    id: string;
+    stage: {
+      id: string;
+    };
+  };
+  id: string;
+  name: string;
+  number: number;
+  status: Status;
+}
+
+export interface Div2Match {
+  id: string;
+  publicNote: string | null;
+  opponents: Div2Opponent[];
+  tournament: Div2Tournament;
+  stage: Div2Stage;
+  group: Div2Group;
+  round: Round;
+  number: number;
+  type: string;
+  scoreType: string;
+  status: string;
+  scheduledDatetime: string;
+  playedAt: string;
+  reportStatus: string | null;
+  reportClosed: boolean;
+}
+
+export interface Div2Opponent {
+  participant: Div2Participant;
+  number: number;
+  position: number;
+  rank: string | null;
+  result: string;
+  forfeit: boolean;
+  score: number;
+}
+
+export interface Div2Participant {
+  id: string;
+  logo: {
+    id: string;
+  };
+  type: string;
+  customFieldValues: {
+    logo: {
+      icon_small: string;
+      icon_medium: string;
+      logo_small: string;
+      logo_medium: string;
+      logo_large: string;
+    };
+  };
+  name: string;
+  team: any | null;
+  lineup: any[];
+}
+
+export interface Div2Tournament {
+  id: string;
+  discipline: string;
+  name: string;
+  status: string;
+  participantType: string;
+  scheduledDateStart: string;
+  scheduledDateEnd: string;
+  public: boolean;
+  logo: string | null;
+  settings: {
+    discipline: string | null;
+    tournament_code: string | null;
+    paymentGateway: string | null;
+  };
+  disciplineFeatures: {
+    type: string;
+    name: string;
+    options: {
+      enabled: boolean;
+    };
+  }[];
+}
+
+export interface Div2Stage {
+  id: string;
+  number: number;
+  name: string;
+  type: string;
+  status: string;
+  closed: boolean;
+  settings: {
+    size: number;
+    threshold: number;
+    grand_final: string;
+    skip_round1: boolean;
+    round_naming: string;
+  };
+}
+
+export interface Div2Group {
+  id: string;
+  number: number;
+  name: string;
+  status: string;
+  closed: boolean;
+  settings: {
+    size: number;
+  };
+}
+
+export interface FinalResult {
+  opponent: string;
+  kcorpScore: number;
+  opponentScore: number;
+}
+
+export interface TeamScore {
+  wins: number;
+  losses: number;
+}
+
+export interface Div2MatchResult {
+  date: string;
+  result: string;
+  opponent: string;
+  isWin: boolean;
 }

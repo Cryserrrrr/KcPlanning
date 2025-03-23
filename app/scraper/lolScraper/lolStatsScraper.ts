@@ -476,15 +476,19 @@ export const getTeamsStats = async (
 
       const tableLength = Array.from(table.querySelectorAll("tbody tr")).length;
 
-      const rows = Array.from(table.querySelectorAll("tbody tr")).slice(1, 6);
-      const championStats = rows
-        .map((row) => {
-          const cells = Array.from(row.querySelectorAll("td"));
-          return {
-            champion:
-              cells[0]
-                ?.querySelector("span.markup-object-name")
-                ?.textContent?.trim() || "",
+      const rows = Array.from(table.querySelectorAll("tbody tr"));
+      const championStats = [];
+      for (let i = 0; i < rows.length && championStats.length < 5; i++) {
+        const row = rows[i];
+        const cells = Array.from(row.querySelectorAll("td"));
+        const champion =
+          cells[0]
+            ?.querySelector("span.markup-object-name")
+            ?.textContent?.trim() || "";
+
+        if (champion) {
+          championStats.push({
+            champion,
             gamesPlayed: cells[1]?.textContent?.trim() || "",
             winRate: cells[5]?.textContent?.trim() || "",
             kda: cells[9]?.textContent?.trim() || "",
@@ -492,9 +496,9 @@ export const getTeamsStats = async (
             gm: cells[13]?.textContent?.trim() || "",
             dmgm: cells[15]?.textContent?.trim() || "",
             kpar: cells[16]?.textContent?.trim() || "",
-          };
-        })
-        .filter((item) => item.champion.length > 0);
+          });
+        }
+      }
 
       return { championStats, numberOfChampionsPlayed: tableLength };
     });

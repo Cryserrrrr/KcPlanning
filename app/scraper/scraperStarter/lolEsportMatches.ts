@@ -1,10 +1,11 @@
 import { connectDB } from "~/db";
-import { scrapeLolTeams } from "../lolTeamScraper";
+import { scrapeLolTeams } from "../lolScraper/lolTeamScraper";
 import { Match } from "~/models/match";
-import { scrapeLolStats } from "../lolStatsScraper";
+import { scrapeLolStats } from "../lolScraper/lolStatsScraper";
 import { ScrapingResult, MatchType, PlayerType } from "~/types/match";
 import { riotMatchScraper } from "./riotMatch";
 import { Links } from "~/utils/links";
+import { correctLolName } from "~/utils/utilsFunctions";
 
 /**
  * Scrapes League of Legends matches from the specified URL.
@@ -50,7 +51,9 @@ export async function scrapeLeagueOfLegendsMatches(): Promise<void> {
       } else if (team.name === "TBD") {
         team.players = [];
       } else {
-        const roster: PlayerType[] = await scrapeLolTeams(team.name);
+        const roster: PlayerType[] = await scrapeLolTeams(
+          correctLolName(team.name)
+        );
         team.players = roster.map((player: PlayerType) => ({
           ...player,
           stats: null,
@@ -60,8 +63,8 @@ export async function scrapeLeagueOfLegendsMatches(): Promise<void> {
     }
 
     const statsData: ScrapingResult = await scrapeLolStats(
-      match.teams[0].name,
-      match.teams[1].name,
+      correctLolName(match.teams[0].name),
+      correctLolName(match.teams[1].name),
       match.league,
       match.type,
       match.date,

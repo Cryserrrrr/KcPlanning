@@ -26,7 +26,7 @@ const matchSchema = new mongoose.Schema(
     game: { type: String, required: true }, // Ex: "League of Legends"
     type: { type: String, required: true }, // Ex: "Playoffs"
     status: { type: Number, required: true }, // Ex: 0, 1, 2
-    rounds: { type: Number, required: true }, // Ex: 3
+    rounds: { type: Number, required: false }, // Ex: 3
     casters: [{ type: Object, required: true }],
     rankingData: { type: Array, required: false },
     kcStats: { type: Object, required: false },
