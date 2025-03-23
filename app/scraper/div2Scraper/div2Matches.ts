@@ -169,110 +169,110 @@ export const getDiv2Matches = async (): Promise<void> => {
     let rosterAlreadyAdded: { [key: string]: PlayerType[] } = {};
     let teamStatsCache: { [key: string]: TeamStats } = {};
     let rankingDataCache: { [key: string]: RankingData[] } = {};
-    const formattedMatches: MatchType[] = await Promise.all(
-      newMatches.map(async (match) => {
-        let teams: TeamsType[] = match.opponents.map((opponent) => {
-          const name: string = opponent.participant.name;
-          const acronym: string = name
-            .split(" ")
-            .map((word) => word[0])
-            .join("");
-          const logoId: string = opponent.participant.logo.id;
-          const logoUrl: string = `https://www.division2lol.fr/media/file/${logoId}/icon_medium`;
-          return {
-            name,
-            acronym,
-            logoUrl,
-            players: [],
-            stats: {},
-            numberOfChampionsPlayed: 0,
-            score: null,
-          };
-        });
+    const formattedMatches: MatchType[] = [];
 
-        for (const team of teams) {
-          if (rosterAlreadyAdded[team.name]) {
-            team.players = rosterAlreadyAdded[team.name];
-          } else {
-            const roster = await scrapeLolTeams(correctLolName(team.name));
-            team.players = roster.map((player) => ({
-              name: player.name,
-              position: player.position,
-            }));
-            rosterAlreadyAdded[team.name] = roster;
-          }
+    for (const match of newMatches) {
+      let teams: TeamsType[] = match.opponents.map((opponent) => {
+        const name: string = opponent.participant.name;
+        const acronym: string = name
+          .split(" ")
+          .map((word) => word[0])
+          .join("");
+        const logoId: string = opponent.participant.logo.id;
+        const logoUrl: string = `https://www.division2lol.fr/media/file/${logoId}/icon_medium`;
+        return {
+          name,
+          acronym,
+          logoUrl,
+          players: [],
+          stats: {},
+          numberOfChampionsPlayed: 0,
+          score: null,
+        };
+      });
+
+      for (const team of teams) {
+        if (rosterAlreadyAdded[team.name]) {
+          team.players = rosterAlreadyAdded[team.name];
+        } else {
+          const roster = await scrapeLolTeams(correctLolName(team.name));
+          team.players = roster.map((player) => ({
+            name: player.name,
+            position: player.position,
+          }));
+          rosterAlreadyAdded[team.name] = roster;
         }
+      }
 
-        const statsData: ScrapingResult = await scrapeLolStats(
-          correctLolName(teams[0].name),
-          correctLolName(teams[1].name),
-          "div2",
-          match.type,
-          new Date(match.scheduledDatetime),
-          teamStatsCache,
-          rankingDataCache
+      const statsData: ScrapingResult = await scrapeLolStats(
+        correctLolName(teams[0].name),
+        correctLolName(teams[1].name),
+        "div2",
+        match.type,
+        new Date(match.scheduledDatetime),
+        teamStatsCache,
+        rankingDataCache
+      );
+
+      if (!teamStatsCache[teams[0].name] && statsData.firstTeamStats) {
+        teamStatsCache[teams[0].name] = statsData.firstTeamStats;
+      }
+      if (!teamStatsCache[teams[1].name] && statsData.secondTeamStats) {
+        teamStatsCache[teams[1].name] = statsData.secondTeamStats;
+      }
+
+      if (
+        !rankingDataCache[
+          statsData.rankingDataAndCurrentSplit.currentSplit || "div2"
+        ] &&
+        statsData.rankingDataAndCurrentSplit.rankingData
+      ) {
+        rankingDataCache[
+          statsData.rankingDataAndCurrentSplit.currentSplit || "div2"
+        ] = statsData.rankingDataAndCurrentSplit.rankingData;
+      }
+
+      teams[0].stats = statsData.firstTeamStats?.championTableData;
+      teams[1].stats = statsData.secondTeamStats?.championTableData;
+      teams[0].numberOfChampionsPlayed =
+        statsData.firstTeamStats?.numberOfChampionsPlayed;
+      teams[1].numberOfChampionsPlayed =
+        statsData.secondTeamStats?.numberOfChampionsPlayed;
+
+      teams[0].players.forEach((player) => {
+        const playerStats = statsData.firstTeamStats?.playerTableData?.find(
+          (p) => p.name === player.name
         );
+        player.stats = playerStats;
+      });
 
-        if (!teamStatsCache[teams[0].name] && statsData.firstTeamStats) {
-          teamStatsCache[teams[0].name] = statsData.firstTeamStats;
-        }
-        if (!teamStatsCache[teams[1].name] && statsData.secondTeamStats) {
-          teamStatsCache[teams[1].name] = statsData.secondTeamStats;
-        }
+      teams[1].players.forEach((player) => {
+        const playerStats = statsData.secondTeamStats?.playerTableData?.find(
+          (p) => p.name === player.name
+        );
+        player.stats = playerStats;
+      });
 
-        if (
-          !rankingDataCache[
-            statsData.rankingDataAndCurrentSplit.currentSplit || "div2"
-          ] &&
-          statsData.rankingDataAndCurrentSplit.rankingData
-        ) {
+      const date: Date = new Date(match.scheduledDatetime);
+      formattedMatches.push({
+        date,
+        teams,
+        league: "div2",
+        leagueLogoUrl:
+          "https://www.division2lol.fr/media/7301732705288822784/original",
+        type: match.round.name,
+        game: "League of Legends",
+        matchId: match.id,
+        status: 0,
+        rounds: 0,
+        casters: casters,
+        rankingData:
           rankingDataCache[
             statsData.rankingDataAndCurrentSplit.currentSplit || "div2"
-          ] = statsData.rankingDataAndCurrentSplit.rankingData;
-        }
-
-        teams[0].stats = statsData.firstTeamStats?.championTableData;
-        teams[1].stats = statsData.secondTeamStats?.championTableData;
-        teams[0].numberOfChampionsPlayed =
-          statsData.firstTeamStats?.numberOfChampionsPlayed;
-        teams[1].numberOfChampionsPlayed =
-          statsData.secondTeamStats?.numberOfChampionsPlayed;
-
-        teams[0].players.forEach((player) => {
-          const playerStats = statsData.firstTeamStats?.playerTableData?.find(
-            (p) => p.name === player.name
-          );
-          player.stats = playerStats;
-        });
-
-        teams[1].players.forEach((player) => {
-          const playerStats = statsData.secondTeamStats?.playerTableData?.find(
-            (p) => p.name === player.name
-          );
-          player.stats = playerStats;
-        });
-
-        const date: Date = new Date(match.scheduledDatetime);
-        return {
-          date,
-          teams,
-          league: "div2",
-          leagueLogoUrl:
-            "https://www.division2lol.fr/media/7301732705288822784/original",
-          type: match.round.name,
-          game: "League of Legends",
-          matchId: match.id,
-          status: 0,
-          rounds: 0,
-          casters: casters,
-          rankingData:
-            rankingDataCache[
-              statsData.rankingDataAndCurrentSplit.currentSplit || "div2"
-            ],
-          kcStats: statsData.kcStats,
-        };
-      })
-    );
+          ],
+        kcStats: statsData.kcStats,
+      });
+    }
 
     await Match.insertMany(formattedMatches);
 

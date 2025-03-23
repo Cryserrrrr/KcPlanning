@@ -25,6 +25,7 @@ export type MatchType = {
   casters?: CasterType[] | null;
   rankingData?: RankingData[] | null;
   kcStats?: KcStats | null;
+  leagueLogoUrl?: string | null;
 };
 
 export type PlayerType = {
