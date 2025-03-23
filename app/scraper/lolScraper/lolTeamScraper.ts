@@ -14,7 +14,7 @@ export async function scrapeLolTeams(teamName: string) {
   try {
     await page.goto(url, {
       waitUntil: "networkidle2",
-      timeout: 30000,
+      timeout: 120000,
     });
   } catch (error) {
     console.log(`🟥 Navigation timeout for ${formattedTeamName}`);
