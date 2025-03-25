@@ -8,7 +8,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     !referer ||
     (!referer.includes("kcagenda.com") && process.env.NODE_ENV === "production")
   ) {
-    return json({ error: "Accès non autorisé" }, { status: 403 });
+    return json({ error: "Unauthorized" }, { status: 403 });
   }
 
   // Vérification de la méthode HTTP
@@ -35,7 +35,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   const endDateTime = new Date(endDate);
   endDateTime.setUTCHours(23, 59, 59, 999);
 
-  const maxRangeMs = 7 * 24 * 60 * 60 * 1000;
+  const maxRangeMs = 10 * 24 * 60 * 60 * 1000;
   if (endDateTime.getTime() - startDateTime.getTime() > maxRangeMs) {
     return json({ error: "Date range is too long" }, { status: 400 });
   }
