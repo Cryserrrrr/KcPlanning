@@ -10,6 +10,7 @@ import {
   RankingData,
 } from "~/types/match";
 import { Links } from "~/utils/links";
+import { correctLolName } from "~/utils/utilsFunctions";
 
 /**
  * Scrapes League of Legends statistics for a match between two teams
@@ -187,7 +188,7 @@ export const getKcStats = async (
     const sideWins = extractSideWinsData(rows);
     const sidePercentages = calculateSideWinPercentages(sideWins);
 
-    const formattedOtherTeam = otherTeam.replace(/\s+/g, "_");
+    const formattedOtherTeam = correctLolName(otherTeam);
 
     const otherTeamCells = rows?.filter(
       (row: any) => row[5] === formattedOtherTeam
@@ -282,14 +283,8 @@ function calculateSideWinPercentages(sideWins: SideWin[]): SidePercentages {
   if (sideWins && sideWins.length > 0) {
     const winByRedSide = sideWins.filter((side: any) => side.side === "Red");
     const winByBlueSide = sideWins.filter((side: any) => side.side === "Blue");
-    const lossByRedSide = sideWins.filter(
-      (side: any) => side.winOrLoss === "Loss" && side.side === "Red"
-    );
-    const lossByBlueSide = sideWins.filter(
-      (side: any) => side.winOrLoss === "Loss" && side.side === "Blue"
-    );
 
-    if (winByRedSide && winByBlueSide && lossByRedSide && lossByBlueSide) {
+    if (winByRedSide && winByBlueSide) {
       winByRedSidePercentage = winByRedSide.length / sideWins.length;
       winByBlueSidePercentage = winByBlueSide.length / sideWins.length;
     }

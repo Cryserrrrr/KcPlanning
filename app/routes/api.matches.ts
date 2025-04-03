@@ -2,7 +2,6 @@ import { json, type LoaderFunction } from "@remix-run/node";
 import { Match } from "~/models/match";
 
 export const loader: LoaderFunction = async ({ request }) => {
-  // Vérification du referer pour limiter les appels à votre domaine
   const referer = request.headers.get("referer");
   if (
     !referer ||
@@ -11,7 +10,6 @@ export const loader: LoaderFunction = async ({ request }) => {
     return json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  // Vérification de la méthode HTTP
   if (request.method !== "GET") {
     return json({ error: "Method not allowed" }, { status: 405 });
   }
@@ -24,7 +22,6 @@ export const loader: LoaderFunction = async ({ request }) => {
     return json({ error: "Start and end dates are required" }, { status: 400 });
   }
 
-  // Validation du format des dates
   if (!isValidDate(startDate) || !isValidDate(endDate)) {
     return json({ error: "Invalid date format" }, { status: 400 });
   }
@@ -45,7 +42,7 @@ export const loader: LoaderFunction = async ({ request }) => {
       date: { $gte: startDateTime, $lte: endDateTime },
     })
       .sort({ date: 1 })
-      .limit(50) // Limiter le nombre de résultats
+      .limit(50)
       .lean();
 
     process.env.NODE_ENV === "development" &&
@@ -53,7 +50,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 
     return json(matches, {
       headers: {
-        "Cache-Control": "public, max-age=300", // Cache de 5 minutes
+        "Cache-Control": "public, max-age=300",
         "Content-Security-Policy": "default-src 'self'",
         "X-Content-Type-Options": "nosniff",
         "X-Frame-Options": "DENY",
@@ -65,7 +62,6 @@ export const loader: LoaderFunction = async ({ request }) => {
   }
 };
 
-// Fonction pour valider le format de date (YYYY-MM-DD)
 function isValidDate(dateString: string): boolean {
   const regex = /^\d{4}-\d{2}-\d{2}$/;
   if (!regex.test(dateString)) return false;
